@@ -64,7 +64,7 @@ tri.exe: main_dynload.o load_library.o timer.o utils.o
 #---------------------------------------------------------------------------------
 
 CC=gcc
-CFLAGS=-Wall -Wextra -std=gnu99 -g
+CFLAGS=-Wall -Wextra -std=gnu99 -g -fpic
 
 SRC=$(wildcard *.c)
 OBJ=$(SRC:.c=.o)
@@ -84,6 +84,9 @@ PROGS=$(BASIC_EXE) $(STATIC_EXE) $(STATIC_LIB) $(DYNAMIC_LIB) $(DYNAMIC_LOAD)
 # Cible générale: génère l'ensemble des programmes spécifiés dans la variable PROGS
 all: $(PROGS)
 
+# Variable pour récupérer tous les .so du dossier courant
+DYNLIB=$(wildcard *.so)
+
 # Nettoyage des sources: efface tous les fichiers générés par la compilation et les scories
 clean:
 	rm -f *.a *.so *.exe *.o *~ \#*
@@ -100,3 +103,13 @@ test: all
 		echo ;\
 	done
 	@echo "*** Fin des tests"
+
+testdl: $(DYNAMIC_LOAD)
+	@echo "*** Début des tests des programmes générés"
+	@for dynlib in $(DYNLIB) ; do \
+		echo "Lancement du programme: $$dynlib" ;\
+		./tri.exe -v -s 10 $$dynlib; \
+		echo ;\
+	done
+	@echo "*** Fin des tests"
+
