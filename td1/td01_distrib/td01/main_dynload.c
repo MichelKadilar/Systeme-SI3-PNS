@@ -5,7 +5,7 @@
 #include "sort.h"
 #include "utils.h"
 #include "timer.h"
-#include "load_library.c"
+#include "load_library.h"
 
 
 /* ------------------------------------------------------------------------------------
@@ -59,9 +59,9 @@ void do_job() {
 
 int main(int argc, char *argv[])
 {
-    load_library()
     /* Décodage des arguments de la ligne de commande */
     Scan_Args(argc, argv);
+    load_library(argv[argc-1]);
 
 	do_job();
 }

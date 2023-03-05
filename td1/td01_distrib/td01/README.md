@@ -210,3 +210,6 @@ Je ne comprends pas comment il est possible de créer correctement les
 bibliothèques partagées même en n'utilisant pas l'option -fpic
 lors de la compilation des fichiers .c (testé en local).
 Est-ce juste par chance que tout fonctionne très bien ainsi ?
+
+Réponse à la dernière séance : Peut-être que -fpic se trouve par 
+défaut dans les options dans les versions récentes de gcc.
