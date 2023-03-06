@@ -24,6 +24,7 @@
 
 static int Size_Array = SIZE;
 static int Verbose = FALSE;
+static int ALL_LIBRARIES = FALSE;
 
 /* ------------------------------------------------------------------------------------
  * Prototypes de fonctions définies plus tard 
@@ -43,11 +44,11 @@ void do_job() {
 
 	printf("Array to sort:");
 	print_list(list, Size_Array);
-	
+
     struct timespec vartime = timer_start();
     sort(list, Size_Array);
     long time_elapsed_nanos = timer_end(vartime);
-	
+
     if (Verbose) {
 		printf("Time taken for sorting (nanoseconds): ");
 		printf("%ld\n", time_elapsed_nanos);
@@ -61,9 +62,19 @@ int main(int argc, char *argv[])
 {
     /* Décodage des arguments de la ligne de commande */
     Scan_Args(argc, argv);
-    load_library(argv[argc-1]);
-
-	do_job();
+    if(ALL_LIBRARIES == FALSE){
+        load_library(argv[argc-1]);
+        do_job();
+    }
+    else { // Question 9
+        char *bibliotheques[] = {"libTri_bubble-dynamicLib.so", "libTri_insertion-dynamicLib.so", "libTri_merge-dynamicLib.so", "libTri_quick-dynamicLib.so"};
+        for (int i = 0; i < 4; i++) {
+            load_library(bibliotheques[i]); // chargement de la bibliothèque courante
+            do_job(); // exécution du tri avec l'algorithme de tri implémenté dans la bibliothèque chargée
+            unload_library(); // déchargement de la bibliothèque courante
+            putchar('\n'); // Saut de ligne
+        }
+    }
 }
 
 /* Analyse des arguments 
@@ -83,6 +94,9 @@ static void Scan_Args(int argc, char *argv[])
 			case 'v':
 				Verbose = TRUE;
 				break;
+            case 'a':
+                ALL_LIBRARIES = TRUE;
+                break;
             }
         }
     }

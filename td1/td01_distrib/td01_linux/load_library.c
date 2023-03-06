@@ -1,18 +1,25 @@
 #include "sort.h"
 #include <dlfcn.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 static void (*func)(int list[], int size);
 
+static void *ref;
+
 void load_library(char *library_name) {
-    void *ref = dlopen(library_name, RTLD_LAZY);
+    ref = dlopen(library_name, RTLD_LAZY);
     if (!ref) {
         exit(1);
     }
     func = dlsym(ref, "sort");
     if ((dlerror()) != NULL || func == NULL) {
         exit(1);
+    }
+}
+
+void unload_library() {
+    if (ref != NULL) {
+        dlclose(ref);
     }
 }
 
