@@ -270,14 +270,57 @@ du dossier courant.
 Puis j'ai défini une nouvelle règle tout en bas du makefile : testdl,
 qui signifie "test dynamic load".
 Cette règle/cible n'a besoin que de tri.exe pour fonctionner, alors
-je lui ai donné la variable "DYNAMIC_LOAD" qui contient simplement
-"tri.exe".
+je lui ai donné comme dépendabce la variable "DYNAMIC_LOAD" qui contient
+simplement "tri.exe".
 Concernant le cas de test en lui-même, il parcourt simplement les
 résultats de la variable "DYNLIB" (contenant les .so du dossier courant),
 exécute tri.exe avec comme paramètres -v, -s, 10, et en dernier argument
 la bibliothèque "courante" (du parcours).
 Les affichages sont les mêmes que le test précédent
 défini par le professeur.
+
+Concernant la taille des exécutables :
+
+On commencera par se rappeler que tri.exe est un exemple de chargement dynamique
+de bibliothèques, cet exécutable ne contient donc pas tel quel le code qu'il va
+utiliser pour trier. De même, il ne contient pas le code qui est dans unused.c ou timer.c.
+Il va chercher les fonctions dont il a besoin lors de l'exécution, cela permet
+en théorie de réduire la taille de l'exécutable.
+Cependant, il ne faut pas oublier que pour pouvoir charger dynamiquement des
+bibliothèques partagées "manuellement", il a fallu coder load_library.c et
+main_dynload.c.
+Or, pour pouvoir coder load_library.c, l'éditeur de lien dynamique a automatiquement
+récupéré la bibliothèque partagée "libdl.so.2", contenant les symboles
+nous permettant d'utiliser l'API de chargement dynamique (dlopen, dlsym, dlclose).
+
+Cela fait de l'information supplémentaire à embarquer dans l'exécutable.
+
+Cela permet donc d'expliquer pourquoi tri.exe fait à peu près la même taille
+que les autres exécutables hormis la version staticExe.
+
+En effet, en utilisant la commande "ls -lh" sur le dossier contenant mes exécutables,
+je remarque que mon tri.exe fait la même taille que la version basicExe,
+qu'il est légèrement plus gros que les versions dynamicLib et staticLib (différence
+négligeable).
+Le fait qu'il n'embarque pas d'algorithme de tri ou de bibliothèque se voit dans
+notre cas (très "simpliste") compensé par le fait que nous avons dû embarquer
+la "libdl" et que nous avons dû coder le chargement, le déchargement 
+de bibliothèques dynamiques, ainsi que la gestion de l'exécution de tout 
+notre programme.
+
+tri.exe dépend des exécutables suivants :
+
+- linux-vdso.so.1, déjà cité au début du compte-rendu, qui est un bout de kernel
+  placé dans chaque programme exécutable afin de simplifier/rendre plus efficaces
+  les appels systèmes implicites.
+- libdl.so.2, il s'agit ici de la bibliothèque partagée fournissant l'API pour
+  charger et décharger des bibliothèques partagées, nécessaire afin de pouvoir
+  utiliser dlopen, dlclose ainsi que dlsym.
+- libc.so.6, qui est la bibliothèque C classique.
+- /lib64/ld-linux-x86-64.so.2, qui est en fait
+  l'éditeur de liens dynamique/le chargeur dynamique, qui permet
+  de gérer le chargement des bibliothèques partagées dans notre programme
+  exécutable.
 
 ## Exercice 8
 
@@ -358,35 +401,36 @@ makefile, à la fin de CFLAGS.
 
 ## Exercice 2
 
-On voit que les fichiers qui ont été produits par la compilation 
+On voit que les fichiers qui ont été produits par la compilation
 sont les suivants : Exe_DynLink.ilk, vc143.pdb, vc143.idb, main.obj,
 et un dossier contenant uniquement des fichiers d'extension ".tlog".
 
 Le seul fichier avec lequel nous sommes familiers serait à limite "main.obj"
 qui semble se rapprocher (voire être identique) à un fichier "main.o".
 
-D'après quelques recherches : 
-- le fichier d'extension .ilk serait ce que l'éditeur de lien prend 
-en entrée.
+D'après quelques recherches :
+
+- le fichier d'extension .ilk serait ce que l'éditeur de lien prend
+  en entrée.
 - le fichier d'extension .pdb serait le fichier contenant la base de données
-du programme qui a été crée par l'éditeur de lien (j'avoue avoir un peu 
-cherché et ne pas avoir trop compris à quoi ceci correspond...). Ce
-fichier contiendrait des informations concernant l'état du projet
-aidant le débogueur Visual Studio.
+  du programme qui a été crée par l'éditeur de lien (j'avoue avoir un peu
+  cherché et ne pas avoir trop compris à quoi ceci correspond...). Ce
+  fichier contiendrait des informations concernant l'état du projet
+  aidant le débogueur Visual Studio.
 - le fichier d'extension .idb serait le "Intermediate debug file" généré
-par Visual Studio...Pas trop compris les détails ni la différence
-avec le fichier .pdb, mais ça a l'air d'aider le débogueur également.
-- Pour les fichiers .tlog...quoi de mieux qu'une citation du site de 
-Microsoft : "Les fichiers .tlog sont utilisés par les builds ultérieures
-pour vérifier ce qui a changé et doit être reconstruit et ce qui est 
-à jour. Les fichiers .tlog sont également la seule source 
-pour l’archivage à jour de la build par défaut dans l’IDE".
-Donc si je comprends bien, ça permet de savoir ce qui a besoin d'être 
-recompilé (un peu comme un makefile).
+  par Visual Studio...Pas trop compris les détails ni la différence
+  avec le fichier .pdb, mais ça a l'air d'aider le débogueur également.
+- Pour les fichiers .tlog...quoi de mieux qu'une citation du site de
+  Microsoft : "Les fichiers .tlog sont utilisés par les builds ultérieures
+  pour vérifier ce qui a changé et doit être reconstruit et ce qui est
+  à jour. Les fichiers .tlog sont également la seule source
+  pour l’archivage à jour de la build par défaut dans l’IDE".
+  Donc si je comprends bien, ça permet de savoir ce qui a besoin d'être
+  recompilé (un peu comme un makefile).
 
 En supprimant tous les autres fichiers à part Exe_DynLink.exe et en
-l'exécutant en mode debug (seule option d'exécution que j'ai pu trouver sans 
-tout régénérer), on voit que le programme s'exécute très bien, 
+l'exécutant en mode debug (seule option d'exécution que j'ai pu trouver sans
+tout régénérer), on voit que le programme s'exécute très bien,
 comme prévu.
 
 ## Exercice 3
@@ -397,13 +441,13 @@ on remarque que le fichier qu'il est essentiel de conserver est :
 la fonction "PrintStop" définie dans printStop.c.
 Cela paraît logique, puisque le code n'est pas copié dans l'exécutable.
 Lors de l'exécution, le code doit alors être cherché dans la bibliothèque
-partagée. Si on supprime cette bibliothèque partagée, 
-le code sera introuvable et le programme prendra fin avec 
+partagée. Si on supprime cette bibliothèque partagée,
+le code sera introuvable et le programme prendra fin avec
 un message d'erreur.
 
 ## Exercice 4
 
-J'ai, avec les fonctions de l'API Win32, reproduit à peu près le code 
+J'ai, avec les fonctions de l'API Win32, reproduit à peu près le code
 présent dans le fichier load_library.c, côté Unix.
 
 Dans le main.c, j'ai dû définir un nouveau type de pointeur sur fonction :
@@ -411,7 +455,7 @@ Dans le main.c, j'ai dû définir un nouveau type de pointeur sur fonction :
 PrintStop définie dans la bibliothèque partagée.
 
 Ensuite, le code est très comparable à ce que j'ai côté Unix :
-je définis une variable statique du type défini précédemment 
+je définis une variable statique du type défini précédemment
 (pointeur de fonction) : static function func.
 Par la suite, je charge la bibliothèque partagée :
 LoadLibrary(TEXT("C:/Users/Michel K/source/repos/Bibliotheques/Debug/Bibliotheques.dll")).
@@ -422,11 +466,11 @@ mais je préfère passer par une version "code plus propre").
 
 La récupération de la fonction "PrintStop" dans la bibliothèque se fait alors ainsi :
 func = (function) GetProcAddress(ref, "PrintStop").
-On remarquera que le cast est nécessaire. Si on ne cast pas, la 
+On remarquera que le cast est nécessaire. Si on ne cast pas, la
 compilation échoue.
 On récupère alors dans la variable func (qui est un pointeur de fonction)
 l'adresse de "PrintStop" dans la bibliothèque partagée.
-On peut alors utiliser la fonction PrintStop définie dans la bibliothèque 
+On peut alors utiliser la fonction PrintStop définie dans la bibliothèque
 partagée en utilisant "func" : func("Test dynamic load").
 Cela permet donc de faire un appel à "PrintStop" en lui donnant comme
 paramètre : "Test dynamic load".
