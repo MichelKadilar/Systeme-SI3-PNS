@@ -4,13 +4,14 @@
 
 ## Exercice 2
 
-Il y a deux processus du noms de "multiple_fork", ils ont des pids très proches
-en termes de valeur puisque ce sont les processus pères et fils.
-Le processus père a une valeur de PID légèrement inférieure à celle du fils,
-cela s'explique par l'ordre d'exécution des processus.
-Le processus fils a alors un pid légèrement supérieur à celui du père.
-
-Dans mon cas, pid du père : 628, et pid du fils : 630.
+Il y a 11 processus du nom de "multiple_fork" lors de l'exécution, 
+ils ont des pids très proches en termes de valeur puisqu'il s'agit du 
+processus père et de ses 10 fils.
+Le processus père a une valeur de PID légèrement inférieure à celle des fils,
+cela s'explique par l'ordre de création des processus. Le processus père
+existe avant les processus fils, il a donc un pid inférieur.
+Le processus fils a alors un pid légèrement supérieur à celui du père, pour
+les mêmes raisons.
 
 ## Exercice 3
 
