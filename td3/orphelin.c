@@ -13,7 +13,7 @@ int main(void) {
             exit(-1);
         case 0 : {
             while (getppid() == parent_pid) {
-                sleep(1);
+                sleep(5);
             }
             printf("%d\n", getppid());
             break;

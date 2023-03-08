@@ -2,6 +2,14 @@
 
 ## Exercice 1
 
+L'exécution de "./multiple_fork.exe | wc -l" permet de constater qu'il y a
+bien 100 lignes affichées. Si on y ajoute la commande "ps -aux" 
+permettant de lister les processus en cours d'exécution que j'ai réalisé dans
+un terminal séparé du premier, il nous est listé 11 processus du nom de
+"./multiple_fork.exe", ce qui signifie qu'il y a 11 instances de notre
+programme qui tournent (pseudo-)simultanément.
+Un de ces processus est le père, les 10 autres sont les fils.
+
 ## Exercice 2
 
 Il y a 11 processus du nom de "multiple_fork" lors de l'exécution, 

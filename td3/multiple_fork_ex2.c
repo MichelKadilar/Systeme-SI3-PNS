@@ -21,14 +21,13 @@ int main(void) {
                 exit(0);
             default : // execution du parent
             {
-                printf("parent\n");
                 break;
             }
         }
     }
 
-    int status;
-    for (int j = 0; j < P; j++) {
-        wait(&status);
+    int child_status;
+    for (int i = 0; i < P; i++) {
+        wait(&child_status);
     }
 }
