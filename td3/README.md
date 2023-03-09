@@ -98,3 +98,6 @@ A la fin de ce programme, il y a bien un fflush qui sera fait par le processus,
 mais puisque le buffer contenant le message initial a été écrasé par execlp,
 le message est perdu.
 
+## Exercice 6
+
+
