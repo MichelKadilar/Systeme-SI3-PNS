@@ -156,6 +156,6 @@ pas une commande "vide".
 ## Exercice 9
 
 
-Il suffit alors dans notre cas de reproduire le comportement
-de la fonction system dans la fonction my_system, avec : 
+Il suffit alors dans notre cas de reproduire le comportement de la fonction 
+system dans la fonction my_system, avec : 
 execlp("sh", "sh", "-c", my_command, NULL).
