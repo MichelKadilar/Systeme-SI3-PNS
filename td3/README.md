@@ -138,3 +138,24 @@ processus fils grâce à fork().
 
 ## Exercice 8
 
+La fonction system fait un appel implicite à une fonction exec en lui donnant
+en programme à exécuter "/bin/sh" et avec comme arguments "-c" et notre
+commande. "sh" est un programme simulant le comportement d'un shell.
+L'argument "-c" permet de prendre le prochain argument en tant que
+commande shell.
+
+Il suffira alors de prendre en paramètre une commande, de l'analyser
+afin de déterminer s'il s'agit de la commande "cd". Si c'est le cas, alors
+nous exécutons la commande comme fait dans l'exercice 7, sinon nous exécutons
+la commande avec la fonction system, en lui donnant en paramètre notre commande
+à exécuter. La seule commande "built-in" qui est supportée est "cd".
+
+On mettra alors cela dans une boucle while, qui tournera tant qu'on ne donne 
+pas une commande "vide".
+
+## Exercice 9
+
+
+Il suffit alors dans notre cas de reproduire le comportement
+de la fonction system dans la fonction my_system, avec : 
+execlp("sh", "sh", "-c", my_command, NULL).
