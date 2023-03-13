@@ -100,4 +100,41 @@ le message est perdu.
 
 ## Exercice 6
 
+On fait exécuter chaque commande par un fils différent produit à partir d'un fork,
+afin de reproduire le comportement du Shell.
+En effet, le shell reste en vie au cours de toute notre activité sur ce
+dernier. Il doit donc faire exécuter par des processus fils les programmes
+qu'on lui demande d'exécuter.
+
+## Exercice 7
+
+En exécutant ces trois commandes via execlp, on se rend compte que la commande
+"cd" ne semble pas fonctionner. Cela est dû au fait que la commande "cd"
+ne semble pas posséder de fichier qui lui est propre dans les repertoires
+/bin contenant en général les exécutables des programmes tels que "ls", etc.
+Il semble alors que "cd" soit une commande built-in du shell.
+
+Pour remplacer le comportement de "cd", on utilise la fonction chdir.
+chdir prend en paramètre un chemin, ce dernier peut être absolu s'il
+commence par "/", ou relatif dans le cas contraire.
+On se permet ici la combinaison de chdir avec getenv, qui permet de récupérer
+le contenu d'une variable d'environnement.
+Les variables d'environnement par défaut seront par exemple "HOME", "ROOT"...
+
+Il se trouve que la commande "cd" sans argument (ou "cd ~") renvoie vers
+le repertoire : "/home/$USER".
+Dans mon cas, en tapant "echo $HOME" dans le terminal, j'obtiens
+"/home/michelk", correspondant à mon repertoire personnel.
+Ainsi, getenv("HOME"), qui est censé me renvoyer le contenu de ma variable
+d'environnement "HOME", devrait alors me renvoyer "/home/michelk".
+
+Je combine alors getenv("HOME") avec chdir, afin d'imiter le comportement
+de "cd" sans argument, grâce à l'instruction : chdir(getenv("HOME")), qui
+va alors permettre au programme (lors de son exécution) de se déplacer 
+au niveau de "/home/michelk".
+
+Pareillement que précédemment, on fait exécuter chaque programme par des
+processus fils grâce à fork().
+
+## Exercice 8
 
