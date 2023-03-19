@@ -56,9 +56,9 @@ exécution.
 
 ## Exercice 3
 
-Attention, j'ai fait les deux parties de cette exercice dans 
-deux fichiers différents. Les titres H3 (###) indiquent le nom du fichier que je traite 
-dans la partie du compte-rendu. 
+Attention, j'ai fait les deux parties de cette exercice dans
+deux fichiers différents. Les titres H3 (###) indiquent le nom du fichier que je traite
+dans la partie du compte-rendu.
 
 ### threads.c
 
@@ -71,13 +71,13 @@ Lorsque les deux threads s'exécutent l'un après l'autre, on a vu que les ID
 attribués par les appels POSIX étaient les mêmes, puisque le second thread
 "reprenait" l'ID du premier thread (car celui a terminé son exécution).
 Or ici, dans le cas du Thread ID attribué par le système, on remarque que ces
-deux threads ont des identifiants différents (qui se suivent, pour les mêmes 
+deux threads ont des identifiants différents (qui se suivent, pour les mêmes
 raisons que l'ID attribué par un appel POSIX, expliqué plus haut) sur le système.
 
-Ce qu'on remarque, c'est que les thread ID donnés par le système semblent très 
+Ce qu'on remarque, c'est que les thread ID donnés par le système semblent très
 similaires aux ID des processus lourds.
 En effet, le système Linux ne fait pas la différence entre processus lourds et
-threads, il considère les threads comme étant des processus lourds, à la 
+threads, il considère les threads comme étant des processus lourds, à la
 différence près qu'ils ont des ressources partagées avec les autres threads d'un
 même "programme" (tout le processus), et c'est ce qui les rend "légers".
 Chaque thread a son propre "PID", côté système.
@@ -92,22 +92,48 @@ l'identifiant du thread principal.
 J'ai crée un fichier multiple_tread.c, contenant le même code que multiple_fork.c,
 mais adapté pour les threads.
 
-**SUR UN SEUL COEUR**
+**SUR UN SEUL COEUR DE CALCUL**
 
 On remarque que les écarts de temps de création sont assez énormes.
 Les processus lourds prennent sur ma machine (au moins) 2,2 fois plus de temps à
-être crées.
+être créés.
 Le coefficient minimum que j'obtiens est d'environ * 2.
 Le coefficient maximum que j'obtiens est d'environ * 20.
 
-En effet, 100 threads prennent entre 0 et 9 milisecondes à se créer, 
+En effet, 100 threads prennent entre 0 et 9 milisecondes à se créer,
 contre 19 à 30 milisecondes pour les 100 processus lourds.
 Cela est gargantuesque à l'échelle de la machine qui réalise des actions toutes
 les nanosecondes.
 
-
-
 ## Exercice 4 :
+
+J'ai essayé de créer 100, puis 1000, puis 10 000, et enfin 100 000 processus lourds.
+Ma machine me donne une erreur pour les 100 000 processus à créer :
+"fork: resource temporarily unavailable". Car en effet, les processus occupent un
+certain nombre/une certaine quantité de ressources. S'il n'y a plus assez de
+ressources pour créer davantage de processus, alors nous obtenons l'erreur que j'ai
+eu.
+Dans les faits, au moins deux limites auxquelles j'ai pensé existent :
+
+- Des sécurités afin de ne pas créer trop de processus :
+    En l'occurrence, il s'agit d'une sécurité au niveau de l'utilisateur 
+    courant du système.
+    Avec la commande "ulimit -a" (qui m'a été donnée par Arnaud DUMANOIS), 
+    j'ai pu constater que mon utilisateur courant est limité à créer au maximum
+    14 379 processus.
+- Des problèmes de ressources disponibles :
+    S'il n'y a plus assez de mémoire vive
+    afin d'exécuter et faire fonctionner l'ensemble des processus que l'on 
+    veut créer.
+
+## Exercice 5 :
+
+Cf. exercice 3 (je pensais qu'il fallait déjà le faire au moment de l'exercice 3).
+
+## Exercice 6 :
+
+
+## Exercice 7 :
 
 
 # Remarques et questions :
