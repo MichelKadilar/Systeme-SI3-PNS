@@ -100,8 +100,8 @@ Les processus lourds prennent sur ma machine (au moins) 2,2 fois plus de temps �
 Le coefficient minimum que j'obtiens est d'environ * 2.
 Le coefficient maximum que j'obtiens est d'environ * 20.
 
-En effet, 100 threads prennent entre 0 et 9 milisecondes à se créer,
-contre 19 à 30 milisecondes pour les 100 processus lourds.
+En effet, 100 threads prennent entre 1 et 15 milisecondes à se créer,
+contre 22 à 48 milisecondes pour les 100 processus lourds.
 Cela est gargantuesque à l'échelle de la machine qui réalise des actions toutes
 les nanosecondes.
 
@@ -134,6 +134,97 @@ Cf. exercice 3 (je pensais qu'il fallait déjà le faire au moment de l'exercice
 
 
 ## Exercice 7 :
+
+A l'exécution de juste_presque.exe, sans modification, on peut voir des doublons
+dans l'affichage. Ils sont dus au fait qu'un pointeur vers la même variable i
+est passé à la fonction qu'exécutent les threads, et qu'ainsi, quand la valeur 
+de la variable i est incrémentée dans la boucle, la valeur change pour tous 
+les threads encore en exécution.
+
+Dans mon cas, après avoir supprimé le sleep, je n'obtiens en sortie que 
+des messages : "Dans la thread #0", sauf le dernier : "Dans la thread #4", ou alors
+que des "Dans la thread #0".
+En effet, puisque la boucle se poursuit "simultanément" à l'exécution des threads
+créés, ces derniers ... A SUIVRE
+
+## Exercice 9 :
+
+Voir programme.
+
+## Exercice 10 :
+
+Voir programme.
+
+## Exercice 11 :
+
+### Création de processus
+
+Les deux approches ont leurs avantages et leurs inconvénients.
+Ce qui m'a notamment repoussé côté Windows, c'est que je ne connais pas assez
+bien l'environnement C sous Windows. En effet, Windows défini de nombreux alias
+de types et des struct qu'il faut connaître si l'on veut créer un nouveau
+processus.
+Je me suis alors aidé d'internet, mais je pense que personne ne retient toute la
+stucture des paramètres de CreateProcess de tête.
+J'ai réalisé une création de processus assez simple, puisque le processus crée
+ne fait que lancer un terminal cmd, j'ai donc pas eu à m'intéresser de plus près
+aux autres paramètres que le programme à exécuter.
+Heureusement, il existe une documentation expliquant comment cela fonctionne
+et dans laquelle il y a des exemples assez complets vis à vis de CreateProcess et
+de tout ce qui pourrait être lié à cette fonction (WaitForSingleProcess, etc).
+
+De ce côté, POSIX marque selon moi un point : fork() n'a besoin d'aucun paramètre,
+exec prend quelques paramètres, mais qui sont très faciles à comprendre.
+
+Le code fait sur Windows est beaucoup plus difficile à comprendre que le
+code POSIX au premier abord.
+
+De plus, POSIX permet plus de "flexibilité" au niveau du code. 
+En effet, fork() et exec() sont bien deux instructions différentes, tandis que
+CreateProcess() fait nécessairement l'équivalent de fork + exec "d'un seul coup".
+Cette "flexibilité" peut à la fois être un avantage est un inconvénient.
+Certes, l'opération n'est pas "atomique", mais souvent, lorsqu'on fait un fork,
+c'est pour utiliser exec juste après. Alors peut-être que Windows a raison
+d'avoir ces deux instructions (fork + exec) réunies en une seule.
+
+Cependant, Windows permet plus de flexibilité au niveau de la création d'un
+processus. En effet, il est possible de définir certaines propriétés pour le processus
+crée, notamment vis à vis de ses enfants, mais on peut également contrôler la
+priorité du processus à créer (afin qu'il soit priorisé par l'ordonnanceur par
+exemple), le repertoire actif pour le processus à créer, etc.
+On n'a pas la main sur ces choses-là côté POSIX avec simplement fork() et exec(),
+nous devons faire intervenir d'autres fonctions (par exemple getenv(), chdir()
+pour déterminer le repertoire actif du nouveau processus déjà créé).
+
+
+Côté POSIX, on crée donc un processus par duplication puis modification, alors
+que côté Windows, on crée déjà le processus tel qu'on voudrait qu'il soit et 
+qu'il s'exécute.
+
+### Création de threads
+
+Là où sur Linux les threads dérivent des processus lourds afin d'en être des versions
+"allégées", sur Windows, le thread est l'unité de base, et un processus ne fait
+que contenir des threads.
+On ajoutera également que côté Linux, les threads comme les processus lourds ne sont
+pas considérés comme tels, mais comme des "tâches".
+On remarque cela notamment puisque les threads comme les processus lourds ont leur
+propre PID sur le système d'exploitation (appelé TID).
+
+Windows est alors mieux structuré que Linux concernant la gestion et la séparation
+des processus et threads. Cela parait cohérent quand on sait que Linux a 
+ajouté la notion de thread ultérieurement au début du développement du 
+système d'exploitation, alors que Windows l'a pris en compte dès sa création.
+
+La mise en oeuvre sur le système est donc beaucoup plus propre côté Windows.
+
+Concernant le code permettant la mise en oeuvre des threads, POSIX et Windows
+ont fait des choix assez similaires. Leurs API se ressemblent :
+
+| Systeme d'exploitation | thread type | create a thread                                                                                                                                                             | wait for a thread to exit                                                                                                                                                                                                                 | get thread id                                        |
+|------------------------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|
+| POSIX                  | pthread_t   | pthread_create(thread_id_storage_address, thread attributes, main function for the thread to execute, argument to pass to the main function)                                | pthread_join(id_thread_to_wait, address where to store the return value of the thread)                                                                                                                                                    | gettid() for system id/pthread_self() for virtual id |
+| WINDOWS                | HANDLE      | CreateThread(default security attributes stack size usage,thread function name,argument to thread function,creation flags, address where is returned the thread identifier) | WaitForSingleObject(thread_handler, waiting_state_of_the_main_thread)  OR WaitForMultipleObjects(number of elements to wait for, pointer to handlers of elements to wait for, wait for all or only one, waiting_state_of_the_main_thread) | GetCurrentThreadId()                                 |
 
 
 # Remarques et questions :
