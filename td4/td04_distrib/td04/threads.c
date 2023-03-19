@@ -3,6 +3,8 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
 
 #define NB_LOOP 5
 
@@ -12,6 +14,7 @@ void *thread_print_info(void *arg) {
 
     for (int i = 0; i < NB_LOOP; i++) {
         printf("PID du processus courant : %d, identifiant du thread POSIX courant : %ld\n", getpid(), pthread_self());
+        printf("Linux Thread ID: %ld\n", syscall(SYS_gettid));
         sleep(*((int *) arg));
     }
 
@@ -28,6 +31,7 @@ long not_simultaneous_create_join_thread(pthread_t pthread, void *(*fun)(void *a
 
 int main(int argc, char *argv[]) {
     printf("PID du processus courant : %d\n", getpid());
+   // printf("TID du processus courant : %d\n", gettid()); // TID du thread principal = PID du processus lourd
     int n1, n2;
     int parallele;
     if(argc == 4){
