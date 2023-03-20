@@ -132,7 +132,25 @@ Cf. exercice 3 (je pensais qu'il fallait déjà le faire au moment de l'exercice
 
 ## Exercice 6 :
 
+Avec ps -aux, on remarque qu'on ne voit que les processus lourds et pas les
+threads dans la liste des processus actifs/en cours d'exécution.
+On remarque alors que les différents processus lourds ont bien un PID différent,
+comme on s'y attendait.
 
+On constate avec htop que tous les threads ont bien un identifiant différent
+les uns des autres, cela s'explique par le fait que POSIX considère un thread
+comme un processus "léger", et que donc leurs propriétés soient très similaires 
+aux processus lourds, hormis que les threads partagent leurs ressources avec 
+les autres threads, contrairement aux processus lourds.
+On remarque également que tous les threads ont un même identifiant de processus,
+cela est normal puisqu'ils sont tous issus du même processus.
+(Dans les faits, il faudrait plutôt parler du thread principal et de son tid, mais
+on peut vulgariser ici en disant "processus" au lieu de "thread principal").
+
+Pour finir, on peut remarquer que l'utilisation de ressources est beaucoup plus
+importante côté processus lourds, cela est normal puisque les threads sont créés
+afin de se partager les ressources du processus lourd qui les porte, alors qu'un
+processus lourd a ses propres ressources qui lui sont propres.
 
 ## Exercice 7 :
 
@@ -166,6 +184,8 @@ des adresses mémoires différentes pour chacune des valeurs de i, et donc
 aucun chevauchement des différentes valeurs de i dans les fonctions.
 
 ## Exercice 8 :
+
+
 
 ## Exercice 9 :
 
@@ -215,7 +235,6 @@ exemple), le repertoire actif pour le processus à créer, etc.
 On n'a pas la main sur ces choses-là côté POSIX avec simplement fork() et exec(),
 nous devons faire intervenir d'autres fonctions (par exemple getenv(), chdir()
 pour déterminer le repertoire actif du nouveau processus déjà créé).
-
 
 Côté POSIX, on crée donc un processus par duplication puis modification, alors
 que côté Windows, on crée déjà le processus tel qu'on voudrait qu'il soit et 
