@@ -133,6 +133,7 @@ Cf. exercice 3 (je pensais qu'il fallait déjà le faire au moment de l'exercice
 ## Exercice 6 :
 
 
+
 ## Exercice 7 :
 
 A l'exécution de juste_presque.exe, sans modification, on peut voir des doublons
@@ -144,8 +145,15 @@ les threads encore en exécution.
 Dans mon cas, après avoir supprimé le sleep, je n'obtiens en sortie que 
 des messages : "Dans la thread #0", sauf le dernier : "Dans la thread #4", ou alors
 que des "Dans la thread #0".
-En effet, puisque la boucle se poursuit "simultanément" à l'exécution des threads
-créés, ces derniers ... A SUIVRE
+Puisque la boucle se poursuit "simultanément" à l'exécution des threads
+créés, on pourrait se dire que la valeur de i sera à chaque fois écrasée par la
+prochaine valeur que la variable va prendre, et que donc nous ne devrions avoir
+que des #4. Seulement, on voit que nous n'avons que des #0.
+
+Une explication possible mais qui ne me convainc pas est la suivante :
+
+Cela est dû au fait que la variable i n'a pas le temps de s'incrémenter alors
+que les threads s'exécutent. Donc tous les threads ont une même valeur de i.
 
 ## Exercice 9 :
 
@@ -253,5 +261,9 @@ et à la fin du thread annexe (qui se termine donc de manière inopinée suite
 à la terminaison du thread principal).
 */
 
+## Exercice 7 :
+
+Demander à M. LAVIROTTE pourquoi nous n'avons que des #0 après avoir supprimé le
+sleep.
 
 
