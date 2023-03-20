@@ -136,6 +136,8 @@ Cf. exercice 3 (je pensais qu'il fallait déjà le faire au moment de l'exercice
 
 ## Exercice 7 :
 
+### Problème de synchronisation
+
 A l'exécution de juste_presque.exe, sans modification, on peut voir des doublons
 dans l'affichage. Ils sont dus au fait qu'un pointeur vers la même variable i
 est passé à la fonction qu'exécutent les threads, et qu'ainsi, quand la valeur 
@@ -153,7 +155,17 @@ que des #4. Seulement, on voit que nous n'avons que des #0.
 Une explication possible mais qui ne me convainc pas est la suivante :
 
 Cela est dû au fait que la variable i n'a pas le temps de s'incrémenter alors
-que les threads s'exécutent. Donc tous les threads ont une même valeur de i.
+que les threads s'exécutent. On pourrait même dire que les threads sont créées
+"en même temps". Donc tous les threads ont une même valeur de i.
+
+### Solution juste.c
+
+Il suffit alors de créer un tableau d'entiers qui va stocker les différentes valeurs
+de i. Ce tableau permet alors d'avoir N cases mémoires différentes, et donc,
+des adresses mémoires différentes pour chacune des valeurs de i, et donc
+aucun chevauchement des différentes valeurs de i dans les fonctions.
+
+## Exercice 8 :
 
 ## Exercice 9 :
 
