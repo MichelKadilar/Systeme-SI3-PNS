@@ -185,6 +185,33 @@ aucun chevauchement des différentes valeurs de i dans les fonctions.
 
 ## Exercice 8 :
 
+### Programme de base
+
+Le programme de base ne comporte qu'un bug d'affichage. La fin de la première partie
+est affichée au début de la deuxième partie. Après la deuxième partie, le problème
+n'apparaît plus.
+
+### Sans sleep
+
+Après avoir enlevé le sleep, on remarque que le programme se déroule très rapidement
+et par conséquent rencontre des erreurs (sinon je ne continuerai pas d'écrire...). Cela signifie alors que le bon déroulement
+du programme ne tient qu'à un sleep près.
+
+Le problème rencontré est un problème de synchronisation entre les différents threads
+(entre le jeu et les joueurs et entre les deux joueurs) par rapport à la valeur
+de la variable "jeu.alumettes".
+On voit d'ailleurs dans les affichages qu'on ne sait pas quel affichage correspond à quel moment d'une partie,
+car les affichages concernant un même joueur se suivent.
+On remarque aussi qu'un des deux joueurs prends des alumettes alors qu'il n'y en a
+plus, que le nombre d'alumettes passe à -1, et que même avec -1 alumette, un des deux
+joueurs continue d'essayer de prendre des alumettes. Il n'y arrive pas, cela donne donc
+de multiples affichages : "joueur prend 0 alumettes, reste -1 alumettes".
+
+### Consommation processeur à 100%, pourquoi ?
+
+La consommation d'un des coeurs de mon processeur est effectivement à 100% (on peut le
+voir avec htop). Je pense que ceci est dû au fait que nous avons plusieurs boucles
+while infinies, une dans chaque fonction exécutée par des threads (donc le jeu + les 2 joueurs).
 
 
 ## Exercice 9 :
@@ -297,4 +324,8 @@ et à la fin du thread annexe (qui se termine donc de manière inopinée suite
 Demander à M. LAVIROTTE pourquoi nous n'avons que des #0 après avoir supprimé le
 sleep.
 
+## Exercice 8 :
 
+Demander à M. LAVIROTTE la cause de la consommation à 100% du processeur durant
+l'exécution du programme jeu.c afin de vérifier que j'ai énoncé la bonne raison 
+dans mon rendu.
