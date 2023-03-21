@@ -19,8 +19,29 @@ On remarquera également que fileno(filename) permet de récupérer le numéro d
 descripteur de fichier du fichier qu'on lui donne en paramètre.
 
 Quant à open(fd, mode), il permet d'ouvrir un fichier (un repertoire est aussi un fichier)
-ayant ce numéro de descripteur de fichier, avec le mode indiqué (read-only, write-only,
+ayant ce numéro de descripteur de fichier, avec² le mode indiqué (read-only, write-only,
 read & write, etc).
 
+Après avoir ouvert un fichier, il est possible de le fermer, et cela en fermant son
+descripteur de fichier, qu'on donne en paramètre de la fonction close(fd).
+Cela a uniquement pour objectif une gestion des ressources.
+En libérant le fichier, il peut éventuellement (lorsqu'on est dans le cas d'une 
+écriture) être rendu disponible pour un autre thread/processus.
+
+A la fin du thread principal et uniquement à la fin du thread principal, tous les
+fichiers ouverts non fermés sont fermés automatiquement par l'extinction du
+thread principal.
+Les fichiers ouverts dans des threads dérivants du thread principal ne sont pas automatiquement 
+fermés à la fin du thread qui les a créés, mais seulement à la fin du thread principal.
+
+En effet, les ressources au sein d'un même processus sont partagées entre tous les
+threads. Or, les fichiers ouverts sont des ressources. Tous les threads ouvrant
+un fichier partagent donc le descripteur de ce fichier (la table de descripteurs est
+également une ressource partagée).
+
+Si maintenant deux threads différents ouvrent le même fichier, deux nouveaux
+descripteurs de fichiers différents seront créés.
+
+Les ouvertures de fichier sont toujours autorisées si le fichier est trouvé.
 
 ## Exercice 2
