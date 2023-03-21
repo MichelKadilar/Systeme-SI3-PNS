@@ -42,6 +42,14 @@ un fichier partagent donc le descripteur de ce fichier (la table de descripteurs
 Si maintenant deux threads différents ouvrent le même fichier, deux nouveaux
 descripteurs de fichiers différents seront créés.
 
+Un descripteur de fichier est une référence vers un fichier ouvert.
+
 Les ouvertures de fichier sont toujours autorisées si le fichier est trouvé.
 
 ## Exercice 2
+
+Lorsqu'on ouvre un fichier (en l'occurrence cela va concerner les repertoires, 
+mais il n'y a aucune différence entre un vrai fichier et un repertoire hormis 
+le type du fichier), une pile stockant ..
+
+rewind_dir permet 
