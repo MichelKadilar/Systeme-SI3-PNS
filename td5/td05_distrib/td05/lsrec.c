@@ -10,7 +10,7 @@
 #include <grp.h>
 #include <time.h>
 
-#define PATH_STORAGE_MAX 500
+#define PATH_STORAGE_MAX 1024
 
 void print_fileinfo(char *filename);
 
@@ -58,46 +58,52 @@ char *get_file_groupname(short uid) {
 }
 
 char *get_date(time_t time) {
-    char *buff = malloc(sizeof(char) * (13+1)); // valeur minimum que j'ai trouvée à tâton pour mon format de date
+    char *buff = malloc(sizeof(char) * (20 + 1)); // valeur minimum que j'ai trouvée à tâton pour mon format de date
     struct tm *timeinfo = localtime(&time);
-    strftime(buff, 13, "%b %d %H:%M", timeinfo);
-    buff[13] = '\0';
+    strftime(buff, 20, "%b %d %H:%M", timeinfo);
+    buff[20] = '\0';
     return buff;
 }
 
 void print_fileinfo(char *filename) {
     int fd = open(filename, O_RDONLY);
-    struct stat *buf = malloc(sizeof(struct stat));
-    stat(filename, buf);
-    printf("%s %ld %s %s %ld %s %s\n", get_permissions(*buf), buf->st_nlink, get_file_owner_username(buf->st_uid),
-           get_file_groupname(buf->st_gid), buf->st_size, get_date(buf->st_ctime), filename);
-    close(fd);
+    if (fd != -1) {
+        struct stat *buf = malloc(sizeof(struct stat));
+        stat(filename, buf);
+        printf("%s %ld %s %s %ld %s %s\n", get_permissions(*buf), buf->st_nlink, get_file_owner_username(buf->st_uid),
+               get_file_groupname(buf->st_gid), buf->st_size, get_date(buf->st_ctime), filename);
+        close(fd);
+    } else {
+        printf("Erreur lors de l'ouverture du fichier : %s\n", filename);
+    }
 };
 
 
 void list(char *filename) {
     if (is_dir(filename)) {
 
-        struct dirent *d;
         DIR *dir = opendir(filename);
+
+        if (!dir) return;
+
+        struct dirent *d;
+
         printf("%s:\n", filename);
-        if (dir) {
-            while ((d = readdir(dir)) != NULL) {
-                printf("%s\t", d->d_name);
-            }
-            printf("\n");
-            rewinddir(dir);
-            while ((d = readdir(dir)) != NULL) {
-                if (!is_dot_dir(d->d_name)) {
-                    char name[PATH_STORAGE_MAX];
-                    sprintf(name, "%s/%s", filename, d->d_name);
-                    list(name);
-                }
-            }
-            closedir(dir);
-        } else {
-            printf("Erreur dans l'ouverture du repertoire : %s\n", filename);
+        while ((d = readdir(dir)) != NULL) {
+            char path[PATH_STORAGE_MAX];
+            sprintf(path, "%s/%s", filename, d->d_name); // pour le cas où filename = ./Tests et d->d_name = bar ou foo par exemple
+            print_fileinfo(path);
         }
+        printf("\n");
+        rewinddir(dir);
+        char path[PATH_STORAGE_MAX] = {};
+        while ((d = readdir(dir)) != NULL) {
+            if (!is_dot_dir(d->d_name)) {
+                sprintf(path, "%s/%s", filename, d->d_name);
+                list(path);
+            }
+        }
+        closedir(dir);
     } else {
         print_fileinfo(filename);
     }
