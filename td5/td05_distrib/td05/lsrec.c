@@ -91,7 +91,8 @@ void list(char *filename) {
         printf("%s:\n", filename);
         while ((d = readdir(dir)) != NULL) {
             char path[PATH_STORAGE_MAX];
-            sprintf(path, "%s/%s", filename, d->d_name); // pour le cas où filename = ./Tests et d->d_name = bar ou foo par exemple
+            sprintf(path, "%s/%s", filename,
+                    d->d_name); // pour le cas où filename = ./Tests et d->d_name = bar ou foo par exemple
             print_fileinfo(path);
         }
         printf("\n");
@@ -100,7 +101,9 @@ void list(char *filename) {
         while ((d = readdir(dir)) != NULL) {
             if (!is_dot_dir(d->d_name)) {
                 sprintf(path, "%s/%s", filename, d->d_name);
-                list(path);
+                if(is_dir(path)) {
+                    list(path);
+                }
             }
         }
         closedir(dir);
