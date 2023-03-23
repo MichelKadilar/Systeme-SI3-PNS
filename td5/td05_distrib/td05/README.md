@@ -89,6 +89,10 @@ Seulement, dans cette fonction, le but est d'afficher la taille totale occupée
 par le répertoire courant (et donc par ses sous-fichiers également) en octets.
 
 
+- La fonction count_files_and_subfiles, qui permet sur le même principe de compter
+  le nombre de fichiers et sous-fichiers d'un répertoire.
+
+
 - La fonction print_fileinfo, qui permet d'afficher les informations sur un fichier.
 Parmi ces informations, on retrouve :
 
@@ -106,18 +110,15 @@ Parmi ces informations, on retrouve :
     * Le groupe du propriétaire
     * OU
     * Le groupe configuré par défaut sur le système
-
+  
 
 * La taille totale du fichier en octets
 
-* La date de création du fichier
+* La date de dernier changement d'état du fichier
 
 * Nom du fichier
 
 **La fonction suivante n'était pas demandée**
-
-- La fonction count_files_and_subfiles, qui permet sur le même principe de compter
-le nombre de fichiers et sous-fichiers d'un répertoire.
 
 
 Toutes ces informations sont retrouvées grâce à la structure stat et à des fonctions
@@ -188,12 +189,68 @@ char *get_date(time_t time)
 Il s'agit simplement ici d'une transformation du format d'une date.
 
 Là où stat nous renvoie une date dans le format "nombre de secondes écoulées
-depuis la création d'UNIX"
+depuis la création d'UNIX", "ls -laR" affiche la date de création du fichier
+sous un format lisible par l'humain sous la forme : "Mois Num_Jour heure:minute",
+nous avons alors besoin de transformer le premier format de date en deuxième format.
+
+Pour cela, on utilise notamment :
+
+```c
+struct tm *timeinfo = localtime(&time);
+strftime(buff, 20, "%b %d %H:%M", timeinfo);
+```
+où %b est le nom raccourci du mois, %d le numéro du jour, %H l'heure et %M les minutes.
+
 
 
 ### Point sur les structures utilisées
 
-- struct stat, DIR, 
+#### struct stat
+```c
+struct stat {
+    dev_t     st_dev;      /* ID du périphérique contenant le fichier */
+    ino_t     st_ino;      /* Numéro inœud */
+    mode_t    st_mode;     /* Protection */
+    nlink_t   st_nlink;    /* Nb liens matériels */
+    uid_t     st_uid;      /* UID propriétaire */
+    gid_t     st_gid;      /* GID propriétaire */
+    dev_t     st_rdev;     /* ID périphérique (si fichier spécial) */
+    off_t     st_size;     /* Taille totale en octets */
+    blksize_t st_blksize;  /* Taille de bloc pour E/S */
+    blkcnt_t  st_blocks;   /* Nombre de blocs alloués */
+    time_t    st_atime;    /* Heure dernier accès */
+    time_t    st_mtime;    /* Heure dernière modification */
+    time_t    st_ctime;    /* Heure dernier changement état */
+};
+```
+
+#### struct dirent
+```c
+struct dirent {
+    long d_ino; /* Always zero */
+    
+    long d_off; /* File position within stream */
+    
+    unsigned short d_reclen; /* Structure size */
+    
+    size_t d_namlen; /* Length of name without \0 */
+    
+    int d_type; /* File type */
+    
+    char d_name[PATH_MAX+1]; /* File name */
+};
+```
+
+#### DIR
+```c
+struct DIR {
+    struct dirent ent;
+    struct _WDIR *wdirp;
+};
+```
+
+On voit que la structure DIR contient la structure "struct dirent" vue précédemment.
+**Cependant, il n'est pas recommandé d'accéder directement à ces attributs.**
 
 
 
