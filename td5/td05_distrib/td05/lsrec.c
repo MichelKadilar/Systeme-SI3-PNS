@@ -12,7 +12,7 @@
 
 #define PATH_STORAGE_MAX 1024
 
-void print_fileinfo(char *filename);
+void print_fileinfo(char *file_path, char *filename);
 
 void list(char *filename);
 
@@ -65,18 +65,74 @@ char *get_date(time_t time) {
     return buff;
 }
 
-void print_fileinfo(char *filename) {
-    int fd = open(filename, O_RDONLY);
-    if (fd != -1) {
-        struct stat *buf = malloc(sizeof(struct stat));
-        stat(filename, buf);
-        printf("%s %ld %s %s %ld %s %s\n", get_permissions(*buf), buf->st_nlink, get_file_owner_username(buf->st_uid),
-               get_file_groupname(buf->st_gid), buf->st_size, get_date(buf->st_ctime), filename);
-        close(fd);
-    } else {
-        printf("Erreur lors de l'ouverture du fichier : %s\n", filename);
-    }
+void print_fileinfo(char *file_path, char *filename) {
+    struct stat *buf = malloc(sizeof(struct stat));
+    stat(file_path, buf);
+    printf("%s %ld %s %s %ld %s %s\n", get_permissions(*buf), buf->st_nlink, get_file_owner_username(buf->st_uid),
+           get_file_groupname(buf->st_gid), buf->st_size, get_date(buf->st_ctime), filename);
 };
+
+int count_files_and_subfiles(char *file_path) { // Développé par erreur
+    if (is_dir(file_path)) {
+
+        DIR *dir = opendir(file_path);
+
+        if (!dir) return -1;
+
+        struct dirent *d;
+
+        int number_of_files_and_subfiles_of_a_directory = 0;
+
+        while ((d = readdir(dir)) != NULL) {
+            number_of_files_and_subfiles_of_a_directory++;
+        }
+        rewinddir(dir);
+        char path[PATH_STORAGE_MAX] = {};
+        while ((d = readdir(dir)) != NULL) {
+            if (!is_dot_dir(d->d_name)) {
+                sprintf(path, "%s/%s", file_path, d->d_name);
+                if (is_dir(path)) {
+                    number_of_files_and_subfiles_of_a_directory += count_files_and_subfiles(path);
+                }
+            }
+        }
+        closedir(dir);
+        return number_of_files_and_subfiles_of_a_directory;
+    } else return 0;
+}
+
+
+int get_size(char *file_path) {
+    struct stat *buf = malloc(sizeof(struct stat));
+    stat(file_path, buf);
+    return buf->st_size;
+}
+
+int get_total_size(char *file_path) {
+    if (is_dir(file_path)) {
+        DIR *dir = opendir(file_path);
+        if (!dir) return -1;
+        struct dirent *d;
+
+        int total_size = 0;
+
+        while ((d = readdir(dir)) != NULL) {
+            char path[PATH_STORAGE_MAX];
+            sprintf(path, "%s/%s", file_path,
+                    d->d_name);
+            if (!is_dir(d->d_name) || is_dot_dir(d->d_name)) {
+                total_size += get_size(path);
+            } else {
+                printf("TOTO : %s\n", d->d_name);
+                total_size += get_total_size(path);
+            }
+        }
+        closedir(dir);
+        return total_size;
+    } else {
+        return get_size(file_path);
+    }
+}
 
 
 void list(char *filename) {
@@ -89,11 +145,15 @@ void list(char *filename) {
         struct dirent *d;
 
         printf("%s:\n", filename);
+        int directory_size = get_total_size(filename);
+        printf("Total : %d\n", directory_size);
+        int nb_files_and_subfiles = count_files_and_subfiles(filename);
+        printf("Nombre de fichiers et sous-fichiers : %d\n", nb_files_and_subfiles);
         while ((d = readdir(dir)) != NULL) {
-            char path[PATH_STORAGE_MAX];
-            sprintf(path, "%s/%s", filename,
-                    d->d_name); // pour le cas où filename = ./Tests et d->d_name = bar ou foo par exemple
-            print_fileinfo(path);
+            //char path[PATH_STORAGE_MAX];
+            //sprintf(path, "%s/%s", filename,
+              //      d->d_name); // pour le cas où filename = ./Tests et d->d_name = bar ou foo par exemple
+            print_fileinfo(filename, d->d_name);
         }
         printf("\n");
         rewinddir(dir);
@@ -101,13 +161,16 @@ void list(char *filename) {
         while ((d = readdir(dir)) != NULL) {
             if (!is_dot_dir(d->d_name)) {
                 sprintf(path, "%s/%s", filename, d->d_name);
-                if(is_dir(path)) {
+                if (is_dir(path)) {
+                    //nb_files_and_subfiles = count_files_and_subfiles(path);
+                    //printf("Total %d\n", nb_files_and_subfiles);
                     list(path);
                 }
             }
         }
         closedir(dir);
     } else {
-        print_fileinfo(filename);
+
+        print_fileinfo(filename, filename);
     }
 }
