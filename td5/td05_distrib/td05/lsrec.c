@@ -11,23 +11,22 @@
 #include <time.h>
 
 #define PATH_STORAGE_MAX 1024
+#define CURRENT_DIRECTORY (".")
 
 void print_fileinfo(char *file_path, char *filename);
 
 void list(char *filename);
 
 int main(int argc, char *argv[]) {
-    // A Changer, on peut avoir plusieurs paramètres en entrée du programme.
-    /*if(argc > 2) printf("Trop d'arguments donnés en paramètre du programme lsrec");
     if(argc > 1){
-
+        for(int i=1; i<argc;i++){
+            list(argv[i]);
+            printf("-------------------------------------------------------------------------------------------------\n");
+        }
     }
     else {
-
-    }*/
-
-    list(argv[1]);
-
+        list(CURRENT_DIRECTORY);
+    }
 }
 
 char *get_permissions(struct stat buf) {
