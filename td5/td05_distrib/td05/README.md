@@ -48,8 +48,160 @@ Les ouvertures de fichier sont toujours autorisées si le fichier est trouvé.
 
 ## Exercice 2
 
-Lorsqu'on ouvre un fichier (en l'occurrence cela va concerner les repertoires, 
-mais il n'y a aucune différence entre un vrai fichier et un repertoire hormis 
-le type du fichier), une pile stockant ..
+Tout d'abord, il est important de noter que les répertoires sont des fichiers.
+Ce qui diffère entre un "vrai" fichier et un répertoire, c'est le type du fichier,
+qui est une information stockée dans différentes structures telles que 
+"struct dirent".
 
-rewind_dir permet 
+Lorsqu'on ouvre un repertoire (en l'occurrence cela va concerner les repertoires, 
+mais il n'y a aucune différence entre un vrai fichier et un "repertoire" (qui est
+un fichier) hormis le type du fichier), une pile stockant tous les parcours de son
+contenu sera créée. 
+Les parcours se font à l'aide d'appels successifs à readdir, qui permet de récupérer
+le "prochain" contenu du répertoire. Il faut donc faire N appels à readdir afin de
+parcourir les N contenus d'un répertoire.
+Pour revenir à un état "non-parcouru"/initial, on peut utiliser
+la fonction rewinddir.
+Si on réutilise de nouveau "readdir" juste après un "rewinddir", alors le prochain
+contenu récupéré sera bel et bien le premier contenu du répertoire.
+
+J'ai donc défini différentes fonctions afin de reproduire le comportement de 
+"ls -laR" :
+
+- La fonction list, qui permet de faire la boucle principale. On prend en entrée
+le fichier point de départ (qui peut donc être un répertoire), s'il s'agit d'un
+fichier classique, on affiche ses informations à l'aide de la fonction print_fileinfo,
+sinon, on parcourt le contenu du fichier avec readdir (il s'agit donc à ce moment 
+là d'un répertoire), et on affiche les informations de chacun des fichiers contenus 
+à l'intérieur avec print_fileinfo. Suite à cela, nous revenons à l'état initial de parcours 
+du contenu du répertoire avec rewinddir. Suite à cela, on reparcourt une nouvelle fois
+tout le contenu du répertoire, mais cette fois-ci, dès qu'on rencontre un répertoire,
+on fait un appel récursif à la fonction list afin de faire le même traitement
+sur le répertoire trouvé (afficher ses fichiers, puis encore une fois entrer dans chacun
+des répertoires de ce répertoire).
+On n'oublie pas de closedir à la fin de notre traitement, bien que cet appel soit faita
+automatiquement à la fin du thread principal.
+
+
+- La fonction get_total_size, qui permet sur le même principe que la fonction list,
+de parcourir l'ensemble des fichiers à partir d'un répertoire donné.
+Seulement, dans cette fonction, le but est d'afficher la taille totale occupée
+par le répertoire courant (et donc par ses sous-fichiers également) en octets.
+
+
+- La fonction print_fileinfo, qui permet d'afficher les informations sur un fichier.
+Parmi ces informations, on retrouve :
+
+
+* Les permissions sur ce fichier
+
+
+* Le nombre de liens du fichier (liens physiques et symboliques)
+
+
+* Le propriétaire du fichier
+
+
+* Le groupe du fichier =
+    * Le groupe du propriétaire
+    * OU
+    * Le groupe configuré par défaut sur le système
+
+
+* La taille totale du fichier en octets
+
+* La date de création du fichier
+
+* Nom du fichier
+
+**La fonction suivante n'était pas demandée**
+
+- La fonction count_files_and_subfiles, qui permet sur le même principe de compter
+le nombre de fichiers et sous-fichiers d'un répertoire.
+
+
+Toutes ces informations sont retrouvées grâce à la structure stat et à des fonctions
+définies afin de récupérer des informations sous certains formats.
+J'ai notamment défini les fonctions : get_permissions, get_file_owner_username,
+get_file_groupname et get_date.
+
+Voyons-les plus en détail :
+
+#### get_permissions
+```c
+char *get_permissions(struct stat buf)
+```
+
+Cette fonction prend en paramètre une structure stat et renvoie une chaîne de caractères
+contenant les permissions sur ce fichier.
+Les vérifications des permissions se font à l'aide de l'attribut "st_mode" de la
+structure stat et grâce à des constantes définies dans stat.h.
+Un "&" logique entre deux valeurs (st_mode et une constante) permet de détecter 
+une permission. Il faut donc en faire autant de fois qu'il y a de permissions possibles.
+Si jamais une permission est accordée en lecture, on ajoute un caractère 'r'
+dans notre chaîne retournée. Si une permission est accordée en écriture : 'w',
+en exécution : 'x'. Et si la permission n'est pas accordée : '-'.
+
+#### get_file_owner_username
+```c
+char *get_file_owner_username(short uid)
+```
+
+Cette fonction prend en paramètre l'id d'un utilisateur, en l'occurrence celui du
+propriétaire du fichier sur lequel on veut des informations.
+En effet, la structure stat nous permet d'accéder à l'id de cet utilisateur : uid.
+Cependant, cela ne suffit pas, "ls -laR" affiche le nom de l'utilisateur.
+Il faut alors trouver son nom à partir de son id.
+
+Pour cela, nous utilisons :
+
+```c
+struct passwd *pws = getpwuid(uid);
+```
+
+qui permet de récupérer dans une structure
+```c 
+struct passwd
+```
+des informations sur un utilisateur à partir de son ID système.
+Nous récupérons depuis cette structure le nom de l'utilisateur :
+```c
+return pws->pw_name;
+```
+
+#### get_file_groupname
+
+Même principe que précédemment :
+
+```c
+char *get_file_groupname(short uid) {
+    struct group *grp = getgrgid(uid);
+    return grp->gr_name;
+}
+```
+
+#### get_date
+```c
+char *get_date(time_t time)
+```
+
+Il s'agit simplement ici d'une transformation du format d'une date.
+
+Là où stat nous renvoie une date dans le format "nombre de secondes écoulées
+depuis la création d'UNIX"
+
+
+### Point sur les structures utilisées
+
+- struct stat, DIR, 
+
+
+
+
+# Questions et Remarques :
+
+## Exercice 1
+
+Comment fonctionne le système de récupération du "prochain" contenu avec readdir,
+et comment fonctionne la pile stockant tous les parcours qui sont réalisés ?
+

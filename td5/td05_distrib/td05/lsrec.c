@@ -13,8 +13,9 @@
 #define PATH_STORAGE_MAX 1024
 #define CURRENT_DIRECTORY (".")
 
-void print_fileinfo(char *file_path, char *filename);
 
+int get_total_size(char *file_path);
+void print_fileinfo(char *file_path, char *filename);
 void list(char *filename);
 
 int main(int argc, char *argv[]) {
