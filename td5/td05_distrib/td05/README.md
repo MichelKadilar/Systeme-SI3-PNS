@@ -326,8 +326,98 @@ Voici quelques exemples de modes :
   * etc.
   * Encore une fois, il est possible de les combiner avec des barres verticales : "|".
 
+La fonction open() renvoie un descripteur de fichier qui pointe vers le fichier ouvert,
+ou -1 si l'opération échoue.
+
 #### La fonction read()
+
+Elle a pour signature :
+```c
+ssize_t read(int fd, void *buf, size_t count);
+```
+
+Cette fonction s'utilise après avoir utilisé la fonction open() vue précédemment,
+car read prend un descripteur de fichier et non pas le chemin du fichier pour identifier
+le fichier à lire.
+
+Lorsque read() lit un caractère, la fonction décale la position du pointeur de caractère d'une position.
+Cela paraît logique : lorsqu'on lit un caractère, le prochain caractère 
+qu'on veut lire est le caractère suivant, il faut donc se placer 
+au niveau/à la position du caractère suivant.
+
+Lorsque read() lit 847 caractères, il déplace donc son curseur de caractère 847 positions
+plus loin dans le fichier.
+
+* Le premier paramètre correspond au descripteur de fichier du fichier ouvert auparavant
+par open().
+
+* Le deuxième paramètre correspond au buffer/tampon qui va stocker les caractères lus
+depuis un fichier.
+
+* Le troisième paramètre correspond au nombre d'octets qu'on veut lire dans un fichier.
+Comme un caractère = 1 octet, on peut réduire dans notre cas ce paramètre à : "nombre
+de caractères à lire depuis un fichier".
+
+La fonction read() renvoie le nombre d'octets réellement lus.
+Ce nombre peut être différent du nombre d'octets qu'on veut lire. En effet, si
+on est arrivé à la fin du fichier, il se peut que nous n'ayons pas concrètement lus
+N octets, mais N - 10 par exemple (Si après il n'y a rien à lire...on arrête de lire).
+
+Une pratique qui est utilisée afin de lire tout le contenu d'un fichier sans trop
+se soucier du nombre d'octets à lire qu'on indique en 3eme paramètre est de réaliser
+une boucle de ce type :
+
+```c
+while (read(fd_file1, buf, BUFFER_SIZE) > 0) { // tant qu'on lit des caractères
+    // Faire quelque chose
+    }
+```
+
+En effet, puisque read() renvoie le nombre d'octets lus et qu'il fait avancer le curseur
+de caractère dans le fichier pointé par le descripteur de fichier : fd_file1, 
+il est possible de boucler sur la fonction read() tant qu'il lit au moins 1 caractère,
+car cela signifie que le fichier n'est pas terminé et qu'il reste encore au moins
+1 caractère à lire. Pour cela, on teste simplement si la valeur renvoyée par read()
+est supérieure à 0. Autrement dit, on teste si read() lit plus que 0 caractère, donc
+qu'il lit toujours au moins un caractère.
+
+Il faut également savoir que read() écrase les données qui sont à l'intérieur du
+buffer qui lui est donné en deuxième paramètre.
+Mais il **ne vide pas** le buffer. Donc lors de (et même après) la dernière itération 
+dans la boucle, le buffer contiendra toujours les N derniers caractères lus.
+
+Si le nombre d'octets à lire indiqué en 3eme paramètre est plus petit que la taille du
+buffer donné en deuxième paramètre, alors le buffer ne contiendra que le nombre de
+caractères à lire indiqués par le troisième paramètre et aura donc une partie vide.
+
+Si le nombre d'octets à lire indiqué en 3ème paramètre est plus grand que la taille du
+buffer donné en deuxième paramètre, alors :
+<br> **---- Zone de danger, je ne suis pas sûr ici, voir ma question tout en bas ----** <br>
+read() ne va lire que le nombre d'octets maximum qu'on peut stocker dans le buffer.
+
 #### La fonction write()
+
+Elle a pour signature :
+```c
+ssize_t write(int fd, const void *buf, size_t count);
+```
+
+Le principe est globalement le même que pour read(), sauf qu'il s'agit d'écrire au
+lieu de lire.
+
+Si on indique plus d'octets à écrire qu'il n'y a d'octets dans notre buffer,
+alors seuls les octets présents dans le buffer seront écrits.
+
+Si on indique moins d'octets à écrire que la taille réelle du buffer, alors
+on écrira autant d'octets que le troisième paramètre indique.
+Attention, on rappelle que le contenu du buffer est écrasé à chaque passage
+dans la fonction write. Les caractères présents dans le buffer mais non-écrits 
+seront donc perdus, sauf lors de la dernière écriture (dernière itération, 
+si on est dans une boucle).
+
+De même, write renvoie le nombre de caractères effectivement/réellement écrits.
+
+#### Combiner read() et write()
 
 
 
@@ -348,4 +438,10 @@ et comment fonctionne la pile stockant tous les parcours qui sont réalisés ?
 
 Qu'est-ce que "d_reclen" dans la structure : struct dirent ? A quoi correspond cette
 taille ?
+
+## Exercice 3
+
+Si l'on donne un 3eme paramètre > à la taille réelle du buffer dans une fonction read(), 
+le curseur avance-t-il uniquement du nombre maximal de caractères qu'on peut 
+stocker dans le buffer, ou avance-t-il en fonction du 3eme paramètre ?
 
