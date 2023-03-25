@@ -15,17 +15,18 @@
 
 
 int get_total_size(char *file_path);
+
 void print_fileinfo(char *file_path, char *filename);
+
 void list(char *filename);
 
 int main(int argc, char *argv[]) {
-    if(argc > 1){
-        for(int i=1; i<argc;i++){
+    if (argc > 1) {
+        for (int i = 1; i < argc; i++) {
             list(argv[i]);
             printf("-------------------------------------------------------------------------------------------------\n");
         }
-    }
-    else {
+    } else {
         list(CURRENT_DIRECTORY);
     }
 }
@@ -49,13 +50,13 @@ char *get_permissions(struct stat buf) {
 
 char *get_file_owner_username(short uid) {
     struct passwd *pws = getpwuid(uid);
-    if(!pws) exit(-1);
+    if (!pws) exit(-1);
     return pws->pw_name;
 }
 
 char *get_file_groupname(short uid) {
     struct group *grp = getgrgid(uid);
-    if(!grp) exit(-1);
+    if (!grp) exit(-1);
     return grp->gr_name;
 }
 
@@ -69,7 +70,7 @@ char *get_date(time_t time) {
 
 void print_fileinfo(char *file_path, char *filename) {
     struct stat *buf = malloc(sizeof(struct stat));
-    if((stat(file_path, buf) != -1)) {
+    if ((stat(file_path, buf) != -1)) {
         printf("%s %ld %s %s %ld %s %s\n", get_permissions(*buf), buf->st_nlink, get_file_owner_username(buf->st_uid),
                get_file_groupname(buf->st_gid), buf->st_size, get_date(buf->st_ctime), filename);
     }
@@ -107,7 +108,7 @@ int count_files_and_subfiles(char *file_path) { // Développé par erreur
 
 int get_size(char *file_path) {
     struct stat *buf = malloc(sizeof(struct stat));
-    if((stat(file_path, buf) != -1)){
+    if ((stat(file_path, buf) != -1)) {
         return buf->st_size;
     }
     return 0;
@@ -159,7 +160,7 @@ void list(char *filename) {
         while ((d = readdir(dir)) != NULL) {
             //char path[PATH_STORAGE_MAX];
             //sprintf(path, "%s/%s", filename,
-              //      d->d_name); // pour le cas où filename = ./Tests et d->d_name = bar ou foo par exemple
+            //      d->d_name); // pour le cas où filename = ./Tests et d->d_name = bar ou foo par exemple
             print_fileinfo(filename, d->d_name);
         }
         printf("\n");

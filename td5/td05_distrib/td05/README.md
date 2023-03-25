@@ -253,7 +253,10 @@ On voit que la structure DIR contient la structure "struct dirent" vue précéde
 **Cependant, il n'est pas recommandé d'accéder directement à ces attributs.**
 
 
+## Exercice 3
 
+
+Permissions
 
 # Questions et Remarques :
 
@@ -261,4 +264,9 @@ On voit que la structure DIR contient la structure "struct dirent" vue précéde
 
 Comment fonctionne le système de récupération du "prochain" contenu avec readdir,
 et comment fonctionne la pile stockant tous les parcours qui sont réalisés ?
+
+## Exercice 2
+
+Qu'est-ce que "d_reclen" dans la structure : struct dirent ? A quoi correspond cette
+taille ?
 
