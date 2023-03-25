@@ -416,7 +416,13 @@ Le principe est globalement le même que pour read(), sauf qu'il s'agit d'écrir
 lieu de lire.
 
 Si on indique plus d'octets à écrire qu'il n'y a d'octets dans notre buffer,
-alors seuls les octets présents dans le buffer seront écrits.
+alors :
+
+---- Zone de danger, je ne suis pas certain, voir ma question à la fin du document ----
+
+seuls les octets présents dans le buffer seront écrits.
+
+---
 
 Si on indique moins d'octets à écrire que la taille réelle du buffer, alors
 on écrira autant d'octets que le troisième paramètre indique.
@@ -521,7 +527,7 @@ ordinaire, on le copie dans le répertoire source grâce à la fonction vue pré
 void copy_file_in_file(char *src_filepath, char *dst_path)
 ```
 
-Dans le cas où on rencontre un dossier dans le répertoire ouvert, on l'ignore 
+Dans le cas où on rencontre un dossier dans le répertoire ouvert, on l'ignore
 (on affiche simplement un message) et on passe au fichier suivant à étudier :
 
 ```c
@@ -550,6 +556,82 @@ Ce chemin "complet" est utile notamment car on appelle copy_file_in_file, et que
 cette fonction utilise la fonction open() qui a besoin d'avoir le chemin vers le fichier
 qu'on veut ouvrir à partir de l'emplacement actuel de notre exécutable.
 
+## Exercice 4
+
+Le principe global de mon programme est simple : j'ai un processus père qui va fork() et qui
+va attendre la fin du processus fils à l'aide de la fonction wait().
+
+### Processus fils hérite du descripteur de fichier ouvert par son processus père
+
+Pour tester cela, j'ai ouvert un fichier avec open() dans le processus père avant de fork().
+A partir de cette ouverture de fichier, j'ai récupéré le descripteur de fichier.
+A noter que j'ai ouvert le fichier en écriture seule, que je le crée s'il n'existe pas, et
+que je ne tronque pas le contenu du fichier, j'écris à la suite.
+Dans le fils, j'écris une phrase dans le fichier ouvert, puis j'utilise la fonction close() afin
+de fermer le fichier dans le processus fils.
+Dans le père, j'écris également une phrase dans le fichier ouvert, et j'utilise également
+close() afin de fermer le fichier dans le processus père.
+
+On peut rapidement deviner que les descripteurs de fichiers sont dupliqués entre le
+processus père et le processus fils.
+
+En effet :
+
+* En affichant le numéro du descripteur de fichier pointant vers le fichier ouvert,
+  on obtient le même numéro dans le processus père et fils, cela est normal, car les variables
+  sont dupliquées (ou plutôt, sont partagées jusqu'à ce que l'un des deux processus écrivent
+  dans une variable partagée, après quoi la variable se voit dupliquée).
+
+
+* En affichant la table des descripteurs de fichier au début des processus père
+  et fils, on remarque qu'il y a autant de descripteurs dans l'un que dans l'autre au début,
+  malgré le fait que le fils ferme les ouvertures de fichiers et répertoires.
+
+
+* En ouvrant un fichier supplémentaire dans le fils que dans le père (et en ne le fermant
+  pas manuellement), on voit en affichant la table de descripteurs qu'il y a 6 éléments
+  dans la table du fils, face à 5 éléments dans la table du père. Les descripteurs ne
+  sont donc pas partagés du fils vers le père.
+
+
+* Le fils s'exécutant avant le père (en raison du wait() dans le père, qui attend donc la fin
+  de son fils), close() est donc appelé une première fois dans le fils, sans pour autant
+  impacter le père par la suite, puisque le père arrive également à écrire sa phrase, tout comme son fils
+  précédemment.
+
+On peut donc conclure que le descripteur de fichier est bel et bien dupliqué entre le processus
+père et le processus fils, et hérité du père vers le fils.
+
+### Processus fils hérite du répertoire ouvert par le processus père
+
+Pour tester cela, j'ai simplement ouvert un répertoire dans le processus père avant de fork()
+à l'aide de opendir().
+Ensuite, dans le père et dans le fils, je parcours tous les fichiers du répertoire ouvert
+à l'aide de readdir() et j'affiche leur nom.
+On remarque alors que dans le fils, tous les fichiers du répertoire sont affichés,
+alors que dans le père, aucun répertoire n'est affiché. Cela est dû au fait que le curseur
+de fichier maintenu dans le répertoire et qui est avancé à chaque lecture par readdir() est arrivé
+à la fin du répertoire, autrement dit, qu'il a parcouru tous les fichiers du répertoire.
+Pour retourner "au début" du répertoire, il aurait fallu utiliser rewinddir(). En l'absence
+de l'appel à cette fonction, le curseur semble rester à la fin du répertoire entre les deux processus.
+On peut donc conclure que les deux processus père et fils partagent une même ouverture
+de dossier qui a été réalisée dans le père, puisque faire avancer le curseur dans le fils
+fait avancer le curseur dans le père.
+
+**Seulement, est-ce un partage ou une duplication ?**
+
+Le closedir() réalisé dans le processus fils (avant que le père après le fork() ne s'exécute)
+n'ayant pas d'impact sur l'accès et le "parcours" (le curseur est à la fin, il n'affiche
+rien, mais il arrive à accéder au répertoire et se rendre compte qu'il est à la fin) du
+répertoire par le processus père.
+
+Il semble donc s'agir d'une duplication, car la fermeture du répertoire dans le fils n'impacte
+pas l'accès au répertoire par le processus père.
+
+## Exercice 5
+
+cf. Exercice 2, je l'ai déjà implémenté.
+
 # Questions et Remarques :
 
 ## Exercice 1
@@ -568,3 +650,5 @@ Si l'on donne un 3eme paramètre > à la taille réelle du buffer dans une fonct
 le curseur avance-t-il uniquement du nombre maximal de caractères qu'on peut
 stocker dans le buffer, ou avance-t-il en fonction du 3eme paramètre ?
 
+Qu'est-ce que write écrit si on donne + d'octets à écrire en 3eme paramètre qu'il n'y a de
+place dans le buffer donné en 2ème paramètre ?
