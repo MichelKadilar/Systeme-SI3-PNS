@@ -15,6 +15,7 @@
 // copie d'un fichier dans un répertoire ou d'un fichier dans un autre fichier
 // Je ne supporte pas la création d'un dossier si jamais il n'existe pas
 void copy_file_in_file(char *src_filepath, char *dst_filepath);
+
 // Je ne supporte pas la création d'un dossier si jamais il n'existe pas
 // Donc je ne supporte pas la copie du sous-dossier d'un dossier dans un autre dossier
 void copy_folder_in_folder(char *src_dirpath, char *dst_dirpath);
@@ -27,17 +28,16 @@ int main(int argc, char *argv[]) {
                 copy_folder_in_folder(argv[1], argv[2]);
             } else if (!is_dir(argv[1])) {
                 copy_file_in_file(argv[1], argv[2]);
-            }
-            else {
+            } else {
                 printf("Opération non supportée\n");
                 exit(1);
             }
         } else {
-            if(is_dir(argv[1])) {
+            if (is_dir(argv[1])) {
                 printf("Opération non supportée\n");
                 exit(1);
             }
-            // pas argc -1 car on ne veut pas atteindre le dernier argument qui est le nom du répertoire
+            // pas argc -1 car on ne veut pas atteindre le dernier argument qui est le nom du répertoire de destination
             for (int i = FIRST_FILE; i < argc - 2; i++) {
                 copy_file_in_file(argv[i], argv[argc - 1]);
             }
@@ -59,11 +59,12 @@ void copy_folder_in_folder(char *src_dirpath, char *dst_dirpath) {
     char complete_src_path[BUFFER_SIZE] = {};
     while ((d = readdir(dir)) != NULL) { // on parcourt tous les fichiers du répertoire courant
         sprintf(complete_src_path, "%s/%s", src_dirpath, d->d_name);
-        if(is_dir(complete_src_path) || is_dot_dir(complete_src_path)){
-            printf("Tentative de copie d'un dossier dans un autre dossier. Opération non-supportée\n");
-            exit(1);
+        if (is_dir(complete_src_path) || is_dot_dir(complete_src_path)) {
+            printf("Tentative de copie d'un dossier dans un autre dossier. Opération non-supportée. Le programme continue.\n");
         }
-        copy_file_in_file(complete_src_path, dst_dirpath);
+        else {
+            copy_file_in_file(complete_src_path, dst_dirpath);
+        }
     }
 }
 
@@ -86,7 +87,7 @@ void copy_file_in_file(char *src_filepath, char *dst_path) {
         // Et on donne le droit d'écriture à tous les utilisateurs membres du groupe (avec le même GID que le fichier mycp1.c)
     }
 
-    if(!file_exists(src_filepath)) {
+    if (!file_exists(src_filepath)) {
         printf("Le fichier source au chemin : %s , n'existe pas\n", src_filepath);
     }
     int fd_file1 = open(src_filepath, O_RDONLY);

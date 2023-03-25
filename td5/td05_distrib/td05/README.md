@@ -463,17 +463,92 @@ while ((char_read = read(fd_file1, buf, BUFFER_SIZE)) > 0) { // tant qu'on lit d
 ```
 
 On compare le nombre d'octets lus et le nombre d'octets écrits. Si ces deux
-valeurs ne correspondent pas, alors on est face à une erreur dans notre cas 
-(car c'est la condition que nous voulons respecter, mais cette condition n'est 
+valeurs ne correspondent pas, alors on est face à une erreur dans notre cas
+(car c'est la condition que nous voulons respecter, mais cette condition n'est
 pas du tout obligatoire).
 
 ### Copier des fichiers dans un dossier
 
+Il s'agit simplement d'une détection du nombre d'arguments donnés en entrée de notre
+programme et de leur type. Si nous avons N-2 fichiers après le nom du programme
+et 1 répertoire en dernier argument après ces N-2 fichiers, alors cela signifie que nous
+sommes dans le cas de figure envisagé : copier des fichiers dans un dossier.
 
+Pour copier les fichiers donnés en arguments dans un dossier, j'ai simplement
+parcouru tous les fichiers ordinaires donnés en entrée du programme et j'ai appelé à
+chaque itération :
+
+```c
+#define FIRST_FILE 1
+// pas argc -1 car on ne veut pas atteindre le dernier argument 
+// qui est le nom du répertoire de destination
+for (int i = FIRST_FILE; i < argc - 2; i++) {
+    copy_file_in_file(argv[i], argv[argc - 1]);
+}
+```
+
+On voit que le deuxième paramètre de ma fonction copy_file_in_file() est le nom du
+répertoire de destination. Cela ne pose pas de soucis, car si le répertoire existe,
+il suffit de créer dans ce répertoire un fichier du même nom que le fichier
+que l'on veut copier, et d'y mettre le contenu du fichier que l'on veut copier.
+C'est la méthode que j'ai utilisée.
+
+Si on a par exemple : "./mycp1.exe file1 dir1", mon programme va intérprêter :
+"cp file1 ./dir1/file1", c'est-à-dire qu'il va créer dans le répertoire dir1 un
+fichier du même nom que le fichier d'origine.
 
 ### Copier un dossier dans un autre dossier
 
-Permissions
+On utilise la fonction suivante :
+
+```c
+void copy_folder_in_folder(char *src_dirpath, char *dst_dirpath);
+```
+
+On rappelle qu'on ne crée pas les sous-dossiers du dossier source dans le dossier
+de destination.
+
+Dans cette fonction, on ouvre le répertoire source avec :
+
+```c
+DIR *dir = opendir(src_dirpath);
+```
+
+Puis on parcourt l'ensemble des fichiers du répertoire. Lorsqu'on rencontre un fichier
+ordinaire, on le copie dans le répertoire source grâce à la fonction vue précédemment :
+
+```c
+void copy_file_in_file(char *src_filepath, char *dst_path)
+```
+
+Dans le cas où on rencontre un dossier dans le répertoire ouvert, on l'ignore 
+(on affiche simplement un message) et on passe au fichier suivant à étudier :
+
+```c
+char complete_src_path[BUFFER_SIZE] = {};
+while ((d = readdir(dir)) != NULL) { // on parcourt tous les fichiers du répertoire courant
+     sprintf(complete_src_path, "%s/%s", src_dirpath, d->d_name);
+    if (is_dir(complete_src_path) || is_dot_dir(complete_src_path)) {
+        printf("Tentative de copie d'un dossier dans un autre dossier. Opération non-supportée. Le programme continue.\n");
+    }
+    else {
+        copy_file_in_file(complete_src_path, dst_dirpath);
+    }
+}
+```
+
+L'instruction sprintf() est ici utilisée afin de créer le chemin du fichier à chercher
+dans le répertoire de départ ouvert. Car en effet, on a certes ouvert le répertoire
+de départ, mais nous ne possédons pas le chemin vers le fichier courant à chaque
+copie que l'on veut faire.
+Il suffit alors de concaténer le chemin du répertoire avec le nom du fichier courant.
+Par exemple : si le répertoire est "./Tests/", qu'on l'ouvre et qu'on parcourt ses fichiers,
+on ne sait pas quel fichier on doit copier, à ce stade-là.
+Pour avoir le chemin du fichier à copier, on concatène donc "./Tests/" au nom du fichier
+courant, par exemple "foo", afin d'obtenir le chemin du fichier courant : "./Tests/foo".
+Ce chemin "complet" est utile notamment car on appelle copy_file_in_file, et que
+cette fonction utilise la fonction open() qui a besoin d'avoir le chemin vers le fichier
+qu'on veut ouvrir à partir de l'emplacement actuel de notre exécutable.
 
 # Questions et Remarques :
 
