@@ -15,10 +15,6 @@
 // copie d'un fichier dans un répertoire ou d'un fichier dans un autre fichier
 // Je ne supporte pas la création d'un dossier si jamais il n'existe pas
 void copy_file_in_file(char *src_filepath, char *dst_filepath);
-
-// Je ne supporte pas la création d'un dossier si jamais il n'existe pas
-void copy_files_in_folder(char *dst_dirpath, char *src_filepath, ...);
-
 // Je ne supporte pas la création d'un dossier si jamais il n'existe pas
 // Donc je ne supporte pas la copie du sous-dossier d'un dossier dans un autre dossier
 void copy_folder_in_folder(char *src_dirpath, char *dst_dirpath);

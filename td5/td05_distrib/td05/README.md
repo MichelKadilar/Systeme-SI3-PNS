@@ -255,6 +255,85 @@ On voit que la structure DIR contient la structure "struct dirent" vue précéde
 
 ## Exercice 3
 
+J'ai ajouté deux consignes à mon sujet : 
+* On peut créer un fichier dans un dossier s'il n'existe pas.
+Le fichier destination sera alors créé avec le même nom que le fichier d'origine.
+
+* On peut copier un dossier dans un autre dossier (mais les sous-dossiers ne sont
+pas copiés).
+
+Dans mon code, deux principales fonctions sont utilisées :
+
+```c
+void copy_file_in_file(char *src_filepath, char *dst_filepath);
+void copy_folder_in_folder(char *src_dirpath, char *dst_dirpath);
+```
+
+### Copier un fichier dans un autre fichier
+
+**Si le fichier de destination n'existe pas, on le crée, sinon, 
+on écrase le contenu du fichier de destination**
+
+On utilise la fonction suivante :
+
+```c
+void copy_file_in_file(char *src_filepath, char *dst_filepath);
+```
+
+Dans cette fonction, les éléments importants sont :
+
+#### La fonction open() :
+
+Elle a pour signature : 
+```c
+open(const char *pathname, int flags, mode_t mode)
+```
+
+* Le premier paramètre correspond au chemin du fichier à ouvrir.
+
+
+* Le deuxième paramètre correspond aux drapeaux, c'est-à-dire d'ouvrir le fichier
+avec certaines propriétés. **Il est possible de les cumuler grâce au caractère "|"
+entre chaque propriété.<br>
+Voici quelques exemples de propriété :
+  * **O_RDONLY** pour ouvrir le fichier en lecture seule. On ne pourra que le lire.
+  * **O_WRONLY** pour ouvrir le fichier en écriture seule. On ne pourra qu'écrire.
+  * **O_RDWR** pour ouvrir le fichier en lecture et en écriture.
+  * **O_CREAT** pour créer le fichier à l'emplacement indiqué par le premier paramètre
+  pathname s'il n'existe pas.
+  * **O_TRUNC** pour écraser le contenu du fichier à ouvrir s'il existe déjà.
+  * Il existe d'autres drapeaux possibles.
+  * Pour les combiner, il suffit de faire par exemple : "O_WRONLY | O_CREAT" afin
+d'ouvrir le fichier en écriture seule et de le créer s'il n'existe pas.
+
+
+* Le troisième paramètre correspond aux modes, c'est-à-dire aux permissions qui vont
+s'appliquer si nécessaire (par exemple dans le cas où on crée un fichier grâce au flag
+O_CREAT). Le mode ne s'applique que si l'on donne O_CREAT ou O_TMPFILE dans 
+les drapeaux. Les modes permettent notamment de donner des permissions à un 
+fichier qui sera crée.<br>
+Voici quelques exemples de modes :
+  * S_IRWXU, pour que le propriétaire du fichier crée ait les droits de lecture, 
+  d'écriture et d'exécution sur le fichier crée.
+  * S_IRUSR, pour que le propriétaire du fichier crée ait les droits en lecture sur
+  le fichier crée.
+  * S_IWUSR, pour que le propriétaire du fichier crée ait les droits en écriture sur
+  le fichier crée.
+  * S_IXUSR, pour que le propriétaire du fichier crée ait les droits en exécution sur
+    le fichier crée.
+  * S_IWGRP, pour que le groupe auquel appartienne le fichier ait les droits 
+  d'écriture sur le fichier crée (c'est le mode que j'utilise dans mon code source).
+  * etc.
+  * Encore une fois, il est possible de les combiner avec des barres verticales : "|".
+
+#### La fonction read()
+#### La fonction write()
+
+
+
+### Copier des fichiers dans un dossier
+
+### Copier un dossier dans un autre dossier
 
 Permissions
 
