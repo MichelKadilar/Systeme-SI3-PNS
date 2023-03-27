@@ -89,10 +89,6 @@ J'ai donc défini différentes fonctions afin de reproduire le comportement de
   par le répertoire courant (et donc par ses sous-fichiers également) en octets.
 
 
-- La fonction count_files_and_subfiles, qui permet sur le même principe de compter
-  le nombre de fichiers et sous-fichiers d'un répertoire.
-
-
 - La fonction print_fileinfo, qui permet d'afficher les informations sur un fichier.
   Parmi ces informations, on retrouve :
 
@@ -119,6 +115,9 @@ J'ai donc défini différentes fonctions afin de reproduire le comportement de
 * Nom du fichier
 
 **La fonction suivante n'était pas demandée**
+
+* La fonction count_files_and_subfiles, qui permet sur le même principe de compter
+  le nombre de fichiers et sous-fichiers d'un répertoire.
 
 Toutes ces informations sont retrouvées grâce à la structure stat et à des fonctions
 définies afin de récupérer des informations sous certains formats.

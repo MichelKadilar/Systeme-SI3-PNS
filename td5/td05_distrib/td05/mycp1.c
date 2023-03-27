@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
                 exit(1);
             }
             // pas argc -1 car on ne veut pas atteindre le dernier argument qui est le nom du répertoire de destination
-            for (int i = FIRST_FILE; i < argc - 2; i++) {
+            for (int i = FIRST_FILE; i < argc - 1; i++) {
                 copy_file_in_file(argv[i], argv[argc - 1]);
             }
         }
