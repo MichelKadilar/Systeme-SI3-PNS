@@ -235,6 +235,77 @@ dès la première écriture dans le fichier après cette ouverture.
 
 ## Exercice 3
 
+Dans cet exercice, j'ai fait exprès de me faire avoir, afin de pouvoir étudier plus en détail
+le comportement du code.
+
+On commence par crée un tableau d'entier de taille 2. Cela nous permettra de stocker deux
+descripteurs de fichier : un descripteur de fichier d'écriture, et un descripteur de fichier
+de lecture.
+
+### Mais à quel(s) fichier(s) sont-ils liés ?
+
+Ils sont en fait liés ici à un tube/pipe. Il s'agit d'un canal de communication unidirectionnel
+entre deux processus (les deux processus pouvant en fait être le même).
+
+--- 
+
+### ...Unidirectionnel ?
+
+Les tubes sont en général Unidirectionnels puisque la communication se fait d'un point 
+A à un point B. Il y a un seul écrivain et il peut y avoir N lecteurs. 
+Les données n'empruntent malgré tout toujours qu'un seul chemin (écrivain -> lecteur k). 
+Voilà pourquoi on parle de communication unilatérale.
+
+---
+
+Ici, on utilise la fonction :
+```c
+int pipe(int pipefd[2]); 
+```
+
+Cette fonction permet tout simplement de créer un tube (un canal de communication unidirectionnel)
+et d'assigner pipefd[0] en tant que sortie du tube (lecteur) et pipefd[1] en tant qu'entrée
+du tube (écrivain).
+pipefd[0] et pipefd[1] sont des descripteurs de fichier que l'on peut retrouver dans la
+table de descripteurs de fichier du processus courant.
+
+### Comportements spéciaux
+
+Si le tube est plein, alors l'écrivain (fd[1]) sera automatiquement bloqué et ne pourra
+plus écrire dans le tube jusqu'à ce qu'assez de place se libère.
+
+Si le tube est vide, alors le lecteur (fd[0]) sera automatiquement bloqué et ne pourra
+plus lire depuis le tube jusqu'à ce qu'assez de données soient écrites dans le tube.
+
+Si le lecteur (fd[0]) est fermé avant l'écrivain (fd[1]), alors l'écrivain ne va
+rien écrire dans le tube et on passe à l'instruction suivante dans le programme.
+
+Si l'écrivain (fd[1]) est fermé avant le lecteur (fd[0]), alors le lecteur va lire les octets
+restants à lire depuis le tube, puis va renvoyer un 0 qui indique que read() n'a rien lu durant
+sa dernière itération. **Il ne restera donc pas bloqué comme dans le cas où le tube est vide**
+
+---
+
+Par la suite dans le programme, on écrit dans le fichier qui est pointé par le descripteur 
+de fichier fd[1], c'est-à-dire dans l'entrée du tube.
+La chaîne de caractères "0123456789" est donc envoyée dans le tube avec la fonction write(),
+dans le canal de communication, et reste dans le tube puisqu'il y a toujours un lecteur 
+(et un écrivain, même si ce n'est plus nécessaire ici) qui sont disponibles pour ce tube.
+
+Juste après, on ferme le descripteur de fichier pointant vers l'entrée du tube (l'écrivain, fd[1]).
+Juste après, on appelle la fonction lecture() qui va lire un à un les caractères écrits dans
+le tube. On lit évidemment ce qu'il y a dans le tube grâce au descripteur de fichier fd[0],
+la sortie du tube, le lecteur.
+
+Si on n'avait pas fermé l'écrivain auparavant, ici read() serait resté bloqué après avoir lu les 
+données écrites dans le tube, car un écrivain aurait toujours été disponible, alors après avoir
+renvoyé un nombre != 0 pour avoir lu nos octets écrits, il se serait bloqué, en attente d'une écriture
+de la part de l'écrivain du tube (fd[1]).
+
+Puis on ferme le descripteur de fichier pointant vers la sortie du tube (le lecteur, fd[0]).
+
+## Exercice 4
+
 Le processus fils hérite de la table des descripteurs de fichier du processus père.
 Ainsi,
 
