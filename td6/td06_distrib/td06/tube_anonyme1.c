@@ -6,8 +6,6 @@
 #include <fcntl.h>
 #include <string.h>
 
-#define READ 0
-#define WRITE 1
 #define ERROR_EXIT 1
 #define ARRAY_SIZE 10
 

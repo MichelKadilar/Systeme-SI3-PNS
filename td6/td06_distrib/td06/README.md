@@ -307,6 +307,56 @@ Puis on ferme le descripteur de fichier pointant vers la sortie du tube (le lect
 ## Exercice 4
 
 Le processus fils hérite de la table des descripteurs de fichier du processus père.
-Ainsi,
+La table des descripteurs de fichier est **dupliquée**. Modifier les descripteurs du fils 
+ou du père après un fork() n'auront pas d'impact pour sur la table des descripteurs de 
+fichier de l'autre processus.
+
+Le comportement reste ici globalement le même que précédemment, le gros changement est qu'ici,
+les descripteurs de fichier étant dupliqués entre le père et le fils, nous avons après le fork() 2 écrivains
+et 2 lecteurs.
+
+Puisque les descripteurs de fichier sur le tube sont dupliqués, il faut bien
+penser à fermer les descripteurs aux bons endroits afin de ne pas bloquer le processus courant 
+ou l'autre processus inutilement.
+
+Ici, le fils ne va qu'écrire dans le tube, alors on peut fermer la lecture du tube dans le 
+fils (fd[1]), sinon, cela signifierait que le fils peut écrire...et lire ce qu'il a écrit 
+dans le tube. 
+
+---
+
+**Cf. Ma question à la fin de ce document : Exercice 4**
+
+En soi, cela ne pose aucun problème (ou pas...vu ma question) **dans notre cas**, 
+mais puisque ces disponibilités de lecteurs/écrivains peuvent avoir des conséquences 
+sur le comportement de certaines fonctions telles que read() ou write(), une bonne 
+pratique est d'avoir la main sur les ouvertures et fermetures de fichier (de descripteurs
+de fichiers), et donc de les fermer aux bons endroits.
+
+---
+
+Ce que nous sommes également censés remarquer, c'est que l'appel à read() (dans la fonction
+de lecture) est bloquant dans le fils tant qu'un écrivain est toujours disponible.
+Cela avait donc pour but de nous faire fermer l'un des deux écrivains (puisque l'écrivain 
+initial est dupliqué en raison du fork()) au début du fils, et de voir que read() restait
+bloqué tant que l'écrivain n'est pas aussi fermé dans le père.
+
+En effet, ce que l'on peut observer, c'est que le père écrit sa chaine de caractère dans le tube,
+le fils lit les caractères, puis puisque l'écrivain n'est toujours pas fermé dans le père 
+(en raison du sleep() en cours d'exécution), la fonction read(), sur laquelle nous revenons
+en raison d'une boucle, se bloque et ne renvoie rien pour le moment. 
+En effet, on a vu dans l'exercice 3 que lorsqu'il y a toujours un écrivain disponible 
+sur le tube, l'appel a read() est bloquant, alors dans notre cas, read() reste bloqué et ne 
+renvoie rien pour le moment.
+Puis le sleep(2) passe et l'écrivain est fermé (au moins à la fin du processus, sinon
+manuellement avec close(fd[1])).
+
+On remarque que le fait que nous ayons eu 2 écrivains et 2 lecteurs ici a rendu le tube
+bidirectionnel (père → fils et fils → père étaient possibles).
 
 # Questions & Remarques :
+
+## Exercice 4
+
+Si je ne ferme pas l'écrivain au niveau du fils, comment se fait-il que la lecture ne soit
+pas bloquée ?
