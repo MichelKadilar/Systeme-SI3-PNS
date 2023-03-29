@@ -351,8 +351,9 @@ renvoie rien pour le moment.
 Puis le sleep(2) passe et l'écrivain est fermé (au moins à la fin du processus, sinon
 manuellement avec close(fd[1])).
 
-On remarque que le fait que nous ayons eu 2 écrivains et 2 lecteurs ici a rendu le tube
-bidirectionnel (père → fils et fils → père étaient possibles).
+On remarque que le fait que nous ayons eu 2 écrivains et 2 lecteurs ici a rendu le tube 
+possiblement bidirectionnel (père → fils et fils → père étaient possibles si on n'avait
+pas fermé les descripteurs de fichiers "inutiles" pour l'exercice).
 
 # Questions & Remarques :
 
