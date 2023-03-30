@@ -7,6 +7,7 @@
 #include <string.h>
 
 #define ERROR_EXIT 1
+#define EXIT_OK 0
 #define ARRAY_SIZE 10
 
 void lecture(int fd);
@@ -24,7 +25,7 @@ int main(void) {
         case 0 : // execution du fils
             close(fd[1]); // on ferme l'écrivain/l'entrée du tube
             lecture(fd[0]);
-            exit(0);
+            exit(EXIT_OK);
             break;
         default : // execution du parent
         {

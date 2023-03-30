@@ -369,6 +369,10 @@ le père...**, donc les données du tube vont toujours dans un seul et même sen
 
 ## Exercice 5
 
+Rien de particulier à souligner
+
+## Exercice 6
+
 
 
 # Questions & Remarques :
