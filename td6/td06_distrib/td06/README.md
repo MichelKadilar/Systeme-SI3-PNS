@@ -375,6 +375,49 @@ est bien une file FIFO.
 
 ## Exercice 6
 
+### Question 1
+
+En utilisant "ls -l" dans le répertoire /tmp, on remarque que notre tube nommé a un type
+"p" (premier caractère/octet des permissions), alors que les fichiers ordinaires ont le type
+"-" et que les répertoires ont le type "d". Cela signifie donc que les tubes nommés sont clairement
+distingués des autres types de fichiers, que les tubes nommés sont donc des fichiers "spéciaux".
+
+### Question 2
+
+Pour que chaque processus soit ici écrivain et lecteur, il faudrait créer un second tube nommé dans
+lequel les rôles des processus sont inversés (dans le nouveau tube nommé, l'écrivain devient
+le lecteur et le lecteur devient l'écrivain).
+
+### Question 3
+
+Pour tester le fait d'avoir plusieurs lecteurs, il suffit de lancer sur différents terminaux
+lecteur.exe.
+Cependant, on peut d'ores et déjà dire qu'il va y avoir un problème lors de la lecture des données
+qui sont dans le tube, car un tube dans notre cas est FIFO, et qu'un élément lu est un élément
+retiré du tube, qui ne sera donc plus disponible pour les autres.
+A partir de cela, plusieurs scénarios sont possibles :
+
+
+* Un lecteur va tout lire de manière "atomique"
+
+* Plusieurs lecteurs vont s'intercouper au cours de leurs lectures, chacun lisant un bout
+des données écrites dans le tube.
+
+En l'occurrence, il se trouve que c'est le deuxième scénario qui se réalise sur ma machine.
+J'ai créé un écrivain et deux lecteurs sur le tube nommé "my_named_pipe", et je remarque que
+certains caractères sont lus par le premier lecteur, d'autres par le deuxième, dans le désordre.
+Le premier lecteur qui obtient un caractère rend ce même caractère indisponible pour 
+l'autre lecteur.
+
+Exemple :
+
+Pour la chaîne de caractères d'entrée : "coucou je m'appelle michel et je suis sympa",
+le premier lecteur va lire : "ce m'ppelle mchl t e ui smp", tandis que le deuxième va lire :
+"oucou jaieejssya". On voit qu'aucun caractère lu par un lecteur n'est également lu par 
+l'autre lecteur. C'est parce que cette donnée lue est devenue indisponible (retirée du tube).
+
+## Exercice 7
+
 
 
 # Questions & Remarques :
@@ -383,3 +426,11 @@ est bien une file FIFO.
 
 Si je ne ferme pas l'écrivain au niveau du fils, comment se fait-il que la lecture ne soit
 pas bloquée ?
+
+## Exercice 6
+
+### Question 2
+
+Si on fork() dans l'écrivain et le lecteur et qu'on ouvre en lecture dans le fils de 
+chacun et en écriture dans le père de chacun, n'aurait-on pas une communication 
+bidirectionnelle ?
