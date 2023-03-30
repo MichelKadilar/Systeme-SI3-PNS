@@ -25,6 +25,7 @@ int main(void) {
         case 0 : // execution du fils
             close(fd[1]); // on ferme l'écrivain/l'entrée du tube
             lecture(fd[0]);
+            close(fd[0]); // on ferme le lecteur/la sortie du tube.
             exit(EXIT_OK);
             break;
         default : // execution du parent
@@ -48,5 +49,4 @@ void lecture(int fd) {
         // 1 caractère par 1 caractère, qu'on stocke dans "c",
         write(STDOUT_FILENO, &c, 1); // On écrit le caractère c sur la sortie standard du processus
     }
-    close(fd); // on ferme le lecteur/la sortie du tube.
 }

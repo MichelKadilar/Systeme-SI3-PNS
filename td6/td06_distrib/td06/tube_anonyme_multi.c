@@ -10,12 +10,12 @@
 #define EXIT_OK 0
 #define ALPHABET_MIN "abcdefghijklmnopqrstuvwxyz"
 #define ALPHABET_MAJ "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-#define ALPHABET_LENGTH 26
 #define WRITING_SIZE 2
 #define READING_SIZE 3
 #define ARRAY_SIZE 10
 
 void lecture(int fd);
+void ecriture(int fd, const char* buf, int sleep_time);
 
 int main(void) {
     int fd[2];
@@ -29,11 +29,7 @@ int main(void) {
             exit(ERROR_EXIT);
         case 0 : // execution du premier fils
             close(fd[0]); // on ferme le lecteur/la sortie du tube
-            char *alph1 = ALPHABET_MIN;
-            for (int i = 0; i < ALPHABET_LENGTH; i += WRITING_SIZE) {
-                write(fd[1], &alph1[i], WRITING_SIZE); // la tête de lecture se déplace à chaque fois de 2 caractères
-                //sleep(1);
-            }
+            ecriture(fd[1], ALPHABET_MAJ, 1);
             exit(EXIT_OK);
             break;
         default : // execution du parent
@@ -45,13 +41,7 @@ int main(void) {
                     exit(ERROR_EXIT);
                 case 0 : // execution du second fils
                     close(fd[0]); // on ferme le lecteur/la sortie du tube
-                    char *alph2 = ALPHABET_MAJ;
-                    for (int i = 0; i < ALPHABET_LENGTH; i += WRITING_SIZE) {
-                        write(fd[1], &alph2[i],
-                              WRITING_SIZE); // la tête de lecture se déplace à chaque fois de 2 caractères
-                        // sleep(1); première version
-                        sleep(2);
-                    }
+                    ecriture(fd[1], ALPHABET_MIN, 2);
                     exit(EXIT_OK);
                     break;
                 default :
@@ -69,10 +59,16 @@ int main(void) {
 
 void lecture(int fd) {
     char buf[READING_SIZE];
-    int really_read;
-    while ((really_read = read(fd, buf, READING_SIZE) != 0)) { // on lit depuis le fichier pointé par fd
-        // 3 caractères par 3 caractères, qu'on stocke dans "buf",
-        write(STDOUT_FILENO, buf, really_read); // On écrit le caractère c sur la sortie standard du processus
+    ssize_t nb_byte_read;
+    while ((nb_byte_read = read(fd, buf, sizeof(buf))) != 0){
+        write(STDOUT_FILENO, buf, nb_byte_read);
     }
-    close(fd); // on ferme le lecteur/la sortie du tube.
+}
+
+void ecriture(int fd, const char *buf, int sleep_time){
+    while(*buf != '\0'){
+        write(fd, buf, WRITING_SIZE);
+        buf += WRITING_SIZE;
+        sleep(sleep_time);
+    }
 }

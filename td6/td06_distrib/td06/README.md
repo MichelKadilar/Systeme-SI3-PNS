@@ -369,7 +369,9 @@ le père...**, donc les données du tube vont toujours dans un seul et même sen
 
 ## Exercice 5
 
-Rien de particulier à souligner
+Rien de particulier à souligner, on voit bien les affichages des fils s'entremêlent et
+que les éléments sont lus dans leur ordre d'écriture dans le tube, et qu'ainsi ce tube
+est bien une file FIFO.
 
 ## Exercice 6
 
