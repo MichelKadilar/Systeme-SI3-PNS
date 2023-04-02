@@ -310,15 +310,6 @@ fois par un flush à la fin du thread exécutant la fonction, que le buffer
 n'est pas vidé car l'opération de vidage est interrompue, puis que le message
 est à nouveau affiché par un flush à la fin du thread principal.
 
-/*
-Cela serait dû avec une vision macro au fait que ce thread a atteint le message
-du premier printf mais pas le flush (le \n), ce qui a pour conséquence de maintenir le message
-à afficher dans un buffer qui sera affiché dès qu'un flush sera effectué.
-Ce flush a lieu à deux reprises : A la fin du thread principal,
-et à la fin du thread annexe (qui se termine donc de manière inopinée suite
-à la terminaison du thread principal).
-*/
-
 ## Exercice 7 :
 
 Demander à M. LAVIROTTE pourquoi nous n'avons que des #0 après avoir supprimé le
