@@ -57,8 +57,8 @@ exécution.
 ## Exercice 3
 
 Attention, j'ai fait les deux parties de cette exercice dans
-deux fichiers différents. Les titres H3 (###) indiquent le nom du fichier que je traite
-dans la partie du compte-rendu.
+deux fichiers différents. Les titres H3 (###) ci-dessous indiquent le nom du fichier 
+que je traite dans la partie du compte-rendu.
 
 ### threads.c
 
