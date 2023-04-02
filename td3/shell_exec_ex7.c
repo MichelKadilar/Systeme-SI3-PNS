@@ -30,7 +30,8 @@ int main(void) {
                 case 0 : { // execution du fils
                     int res = execlp("cd", "cd", NULL);
                     if (res == ERROR) {
-                        printf("Erreur du execlp\n");
+                        printf("Erreur du execlp\n"); // cela va s'afficher, normal car il faut utiliser chdir et
+                        // non pas exec pour "cd"
                         exit(ERROR);
                     }
                     exit(WELL);
