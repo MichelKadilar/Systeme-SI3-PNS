@@ -9,9 +9,9 @@ int main(int argc, char *argv[]){
         printf("Erreur ouverture en lecture du tube nommé\n");
         exit(-1);
     }
-    int i;
-    while(read(fd, &i, 1) != 0){
-        write(STDOUT_FILENO, &i, sizeof(int ));
+    char c;
+    while(read(fd, &c, 1) != 0){
+        write(STDOUT_FILENO, &c, sizeof(char));
     }
     close(fd);
     exit(0);

@@ -418,7 +418,24 @@ l'autre lecteur. C'est parce que cette donnée lue est devenue indisponible (ret
 
 ## Exercice 7
 
+Par manque de temps, je résume grossièrement :
+1 - On définit une fonction mypopen qui crée un tube anonyme, fait un fork, 
+dans le père va attendre la fin du fils, puis dans le fils va lire les arguments passés 
+en paramètre de notre exécutable et va les formatter afin de
+créer une chaîne de caractères composée de tous les arguments séparés par des espaces.
+La suite de cette fonction va désigner l'entrée du tube comme étant la sortie standard
+du processus courant, puis va lancer un shell et va lui demander d'interprêter la commande
+que nous avons créée précédemment par concaténation grâce à :
+```c
+ execlp("/bin/sh", "sh", "-c", la_commande, NULL);
+```
+Qui permet d'exécuter "la_commande" dans un shell.
 
+Le père reprend alors la main et renvoie le descripteur de fichier pointant vers
+la sortie du tube.
+
+2 - le processus père lit la sortie du tube (càd le résultat de l'exécution de la commande
+exécutée dans execlp).
 
 # Questions & Remarques :
 
