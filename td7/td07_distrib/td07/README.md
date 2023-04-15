@@ -377,6 +377,10 @@ Dans notre cas, puisqu'on reçoit un SIGINT avec un handler NULL, cela interromp
 programme/met fin au programme, tel qu'est censé être le comportement par défaut du 
 signal SIGINT.
 
+## Exercice 7
+
+Il serait difficile d'interchanger l'ainé et le cadet car
+
 # Remarques et questions
 
 On ne reçoit qu'une seule fois un signal, en fait dans un processus la réception d'un signal
@@ -403,3 +407,14 @@ Background job vs Foreground job - différences ?
 N'aurait-il pas été plus judicieux d'appliquer exactement les mêmes masks à chacun des tests ?
 Notamment les tests 3 et 4. Car actuellement nous comparons sur des "bases" déjà
 différentes.
+
+## Exercice 7 :
+
+J'ai galéré pendant 1h30. J'avais le bon code au bout de 3 min, mais pour une raison qui m'est
+totalement inconnue, le processus père faisait bloquer le programme. Dès lors que j'ai rajouté
+3 affichages : un avant le kill, un après le kill, et un à la fin du pere, le programme
+s'est mis à fonctionner. Quelle est donc cette sorcellerie ?
+Sûrement quelque chose avec l'ordonnanceur, mais c'est louche.
+
+Même avec ces affichages, le programme ne marche qu'une fois sur 2-3. Les autres fois,
+il reste complètement bloqué. Why ?
