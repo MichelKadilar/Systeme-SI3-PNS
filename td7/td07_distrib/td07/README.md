@@ -431,3 +431,6 @@ Sûrement quelque chose avec l'ordonnanceur, mais c'est louche.
 
 Même avec ces affichages, le programme ne marche qu'une fois sur 2-3. Les autres fois,
 il reste complètement bloqué. Why ?
+
+Il semblerait que ça soit la faute de l'ordonnanceur, qui ne crée pas d'abord l'ainé mais 
+le cadet puis exécute le père.
