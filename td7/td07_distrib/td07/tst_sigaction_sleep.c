@@ -41,7 +41,7 @@ int main(void) {
     // la réception et l'exécution du handler du signal défini
     sigaction(SIGSEGV, &sigact, NULL); // On applique la règle précédente et sa_handler pour le signal SIGSEGV
 
-    int i = sleep(60);
+    unsigned int i = sleep(60);
     printf("time remaining : %d\n", i);
     return 0;
 }

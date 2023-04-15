@@ -23,7 +23,7 @@ int main(void) {
     signal(SIGSEGV, on_signal);
     signal(SIGINT, on_signal);
 
-    int i = sleep(60);
+    unsigned int i = sleep(60);
     printf("time remaining : %d\n", i);
     return 0;
 }
