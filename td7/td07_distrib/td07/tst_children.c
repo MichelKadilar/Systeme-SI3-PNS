@@ -35,8 +35,8 @@ int main(void) {
         case 0 : // execution du fils aine
         {
             struct sigaction sa;
-            sa.sa_handler = handler_cadet;
-            sigaction(SIGUSR1, &sa, NULL);
+            sa.sa_handler = handler_aine;
+            sigaction(SIGUSR2, &sa, NULL);
             while (1) {};
             exit(EXIT_FAILURE);
         }
@@ -49,8 +49,8 @@ int main(void) {
                 case 0 : // execution du fils cadet
                 {
                     struct sigaction sa;
-                    sa.sa_handler = handler_aine;
-                    sigaction(SIGUSR2, &sa, NULL);
+                    sa.sa_handler = handler_cadet;
+                    sigaction(SIGUSR1, &sa, NULL);
                     while (1) {};
                     exit(EXIT_FAILURE);
                 }
