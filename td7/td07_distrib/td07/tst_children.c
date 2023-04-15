@@ -35,9 +35,9 @@ int main(void) {
         case 0 : // execution du fils aine
         {
             struct sigaction sa;
-            sa.sa_handler = handler_aine;
-            sigaction(SIGUSR2, &sa, NULL);
-            while(1){};
+            sa.sa_handler = handler_cadet;
+            sigaction(SIGUSR1, &sa, NULL);
+            while (1) {};
             exit(EXIT_FAILURE);
         }
         default : // execution du parent
@@ -49,19 +49,18 @@ int main(void) {
                 case 0 : // execution du fils cadet
                 {
                     struct sigaction sa;
-                    sa.sa_handler = handler_cadet;
-                    sigaction(SIGUSR1, &sa, NULL);
-                    while(1){};
+                    sa.sa_handler = handler_aine;
+                    sigaction(SIGUSR2, &sa, NULL);
+                    while (1) {};
                     exit(EXIT_FAILURE);
                 }
                 default : // execution du parent
                 {
+                    sleep(1);
                     printf("Sending SIGUSR1 to cadet\n");
                     kill(cadet_pid, SIGUSR1);
                     printf("Waiting for children\n");
-                    for (int i = 0; i < 2; i++) {
-                        wait(NULL);
-                    }
+                    while (wait(NULL) < 0) {}
                     printf("Ending the program\n");
                 }
             }

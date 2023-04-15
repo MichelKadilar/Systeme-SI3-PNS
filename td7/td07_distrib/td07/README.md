@@ -379,7 +379,20 @@ signal SIGINT.
 
 ## Exercice 7
 
-Il serait difficile d'interchanger l'ainé et le cadet car
+Il serait difficile d'interchanger l'ainé et le cadet car il y a ici un besoin 
+de synchronisation. L'ainé doit être prêt à recevoir le signal du cadet, et le cadet
+doit être prêt à recevoir le signal du père.
+On a une synchronisation nécessaire dans ce sens : père -> cadet -> ainé.
+
+De plus, si nous interchangeons le cadet et l'ainé, le signal envoyé par le père ne sera
+pas le même que le signal qu'est capable de capturer le "nouveau" cadet (l'ancien ainé),
+qui prendra alors fin, puisque le comportement par défaut de SIGUSR1 quand on ne le capture pas
+est d'interrompre l'exécution du processus destinataire. 
+
+Dans mon cas, l'autre processus fils, qui est l'ancien cadet et donc le nouvel ainé,
+devient un processus orphelin, car il semble s'être lancé après que le père soit sorti
+de la boucle ```while(wait(NULL) < 0)```.
+
 
 # Remarques et questions
 
