@@ -12,9 +12,6 @@ void on_signal(int sig) {
     if (sig == SIGINT) {
         nb_sigint_received++;
     }
-    while(TRUE) {
-        // boucle infinie volontaire pour avoir le temps de lancer des signaux.
-    }
     if (nb_sigint_received == NB_SIGINT_WANTED) {
         kill(getpid(), SIGKILL);
     }
