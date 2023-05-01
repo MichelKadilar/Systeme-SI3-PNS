@@ -182,12 +182,22 @@ void *internal_malloc(size_t o_624baec7fe25b780476c902e5a225945) {
 
 void *internal_malloc(size_t size) {
     Header *prevp, *p;
-    size_t blocs = BLOCKS_TO_ALLOCATE(size);
+    size_t blocs = BLOCKS_TO_ALLOCATE(size); // translation from the number of bytes needed to the number of
+    // blocks needed
     for (prevp = freep, p = NEXT(freep);; prevp = p, p = NEXT(p)) {
-        if (SIZE(p) >= blocs) {
-            if (SIZE(p) == blocs) {
+        if (SIZE(p) >= blocs) { // if we need less blocks than what the current area possess
+            if (SIZE(p) == blocs) { // if number of needed blocks == number of blocks of the current area
                 NEXT(prevp) = NEXT(p);
+                // the current area, which is currently free, will be occupied
+                // so we must update info about the next free area in the previous header
+                // the next free area after the previous header (which actually represent a free area)
+                // is the next free area of the current area's header (which is the area we will return to the user
+                // and that will be considered occupied)
             } else {
+                // we are dividing a big area in two separated parts
+                // One part that we will return so that the user can use it
+                // Another part which will be empty
+                // So we have to create a new header for the part which will be "empty"
                 Header *new = p + blocs;
                 SIZE(new) = SIZE(p) - blocs;
                 NEXT(new) = NEXT(p);
@@ -195,10 +205,15 @@ void *internal_malloc(size_t size) {
 
                 SIZE(p) = blocs;
             }
-            return (void *) (p + 1);
+            return (void *) (p + 1); // we return the block next to the header
+            // because we want user to write directly on blocks we give him, so
+            // we can't return him the header of the area, or he would override the header
+            // if that happens, our system to know the free area would be broken
         }
 
-        if (p == freep) {
+        if (p == freep) { // if we haven't found any free space which is large enough to host the number
+            // of blocks the user needs
+            // then we create a new space (sbrk():allocate_core()) in addition to what is currently existing
             if ((p = allocate_core(blocs)) == NULL) {
                 return NULL;
             } else {
