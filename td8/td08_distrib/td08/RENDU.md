@@ -127,6 +127,40 @@ que lorsqu'on donne un nombre de blocs à allouer à malloc, il va rajouter par 
 un bloc supplémentaire pour le header, ce qui fait donc 47 blocs + 1 bloc header = 48 blocs.
 Au maximum, on peut donc demander l'utilisation de 47 blocs avec malloc.
 
+
+## Exercices à coder
+
+NEXT(ptr) renvoie un pointeur vers un header de la prochaine zone libre,
+censé être le header de la prochaine zone libre. Mais puisqu'on n'écrase pas
+forcément TOUT le contenu de chaque bloc quand on doit les mettre à jour,
+il est possible que des "anciennes/fausses" informations soient contenues
+dans l'attribut ```(pointeur_courant)->info.ptr``` d'un bloc si jamais on
+le prend "au hasard" sans avoir fait un parcours à partir du bloc freep.
+Si un parcours est fait à partir de freep, alors normalement, il ne devrait
+y avoir aucune erreur dans les blocs parcourus.
+
+Le fait de ne pas forcément mettre tout à jour permet d'économiser du temps
+d'exécution, car la mise à jour est en soi inutile, puisque les données
+seront de toute façon écrasées. Par exemple quand un bloc occupé devient 
+libre, il n'est pas nécessaire d'effacer les données contenues dans chacun
+des blocs de la zone libérée. Il suffit d'indiquer que la zone libérée
+est libre, grâce au mécanisme des pointeurs vers les headers de zones libres,
+que l'on obtient par le parcours suivant :
+
+```c
+//Ce code permet de parcourir à l'infini tous les headers des zones 
+// indiquées comme libres
+for (prevp = freep, p = NEXT(freep);; prevp = p, p = NEXT(p)) {
+} // On part de freep, et on parcours grâce à l'attribut "info.ptr"
+// qui pointe vers le header de la prochaine zone libre
+// Cet attribut s'obtient grâce à NEXT(pointeur_du_header_courant)
+```
+
+SIZE(ptr) renvoie le nombre de blocs de la zone courante (header inclus) 
+dont le header est ptr (en fait, ptr est un pointeur vers le header de la 
+zone courante).
+
+
 # Questions et remarques
 
 Page 5 : si on voulait allouer 8 blocs header compris, 

@@ -128,16 +128,18 @@ static void *allocate_core(size_t o_ff0da02c02d81e161f53f59fbf94f724) {
 }*/
 
 static void *allocate_core(size_t size) {
+    if (size < MIN_ALLOCATION) {
+        size = MIN_ALLOCATION;
+    }
     Header *new = mysbrk(size * HEADER_SIZE);
     if (new == ((void *) -1)) {
         fprintf(stderr, "Plus de memoire\n");
         return NULL;
     }
-    if (size < MIN_ALLOCATION) {
-        size = MIN_ALLOCATION;
-    }
+
     SIZE(new) = size;
-    myfree(new);
+    // do not use myfree, because two free are made inside it and it causes errors in HTMLs
+    internal_free(new + 1); // Mise à jour du prev et du next
     return new;
 }
 
@@ -199,6 +201,8 @@ void *internal_malloc(size_t size) {
         if (p == freep) {
             if ((p = allocate_core(blocs)) == NULL) {
                 return NULL;
+            } else {
+                return internal_malloc(size);
             }
         }
     }
@@ -257,8 +261,34 @@ void internal_free(void *o_279d7785802f49a15b5f695ed8f19d8b) {
     };
 }*/
 
-void internal_free(void * ptr){
 
+void internal_free(void *ptr) {
+    if (ptr == NULL) return;
+    Header *fp = (Header *) ptr - 1; // pointer to the header of the zone we want to free
+    Header *prevp, *p;
+    for (prevp = freep, p = NEXT(freep); p < fp; prevp = p, p = NEXT(p)) {
+        if (p == freep) break;
+    }
+    if (prevp + SIZE(prevp) == fp && fp + SIZE(fp) == p) {
+        // libre à gauche et à droite de la zone qu'on veut libérer
+        SIZE(prevp) = SIZE(prevp) + SIZE(fp) + SIZE(p);
+        NEXT(prevp) = NEXT(p);
+    } else if (prevp + SIZE(prevp) == fp) {
+        // libre à gauche de la zone qu'on veut libérer
+        // prevp = prevp + fp
+        SIZE(prevp) = SIZE(prevp) + SIZE(fp);
+        // the next stays the same, we don't need to change it
+    } else if (fp + SIZE(fp) == p) {
+        // libre à droite de la zone qu'on veut libérer
+        // fp = fp + p
+        SIZE(fp) = SIZE(fp) + SIZE(p);
+        NEXT(prevp) = fp;
+        NEXT(fp) = NEXT(p);
+    } else {
+        // occupé à gauche et à droite
+        NEXT(prevp) = fp;
+        NEXT(fp) = p;
+    }
 }
 
 /* ====================================================================== */
@@ -267,8 +297,8 @@ void *internal_calloc(size_t o_dacd7d9656b665abd56e43953773a249, size_t o_d88f13
     size_t o_32f887da913db5757a826d698ab32141 = o_dacd7d9656b665abd56e43953773a249 * o_d88f1339ff278c9eec145bab6aa8e619;
     d_1b841f7f16de41708fbaafa426b7de5d *o_0f90809347ffd00c5c4ec267cae82254;
     o_0f90809347ffd00c5c4ec267cae82254 = d_77f3a163de9b4c9f9ece0fc1e10c8bdd(o_32f887da913db5757a826d698ab32141);
-    d_9704fa3dc09c42a7a0bf66eead5b07c8 (o_0f90809347ffd00c5c4ec267cae82254)
-        d_15e635a880194479a43052f8e7b25db2(o_0f90809347ffd00c5c4ec267cae82254, o_32f887da913db5757a826d698ab32141);;
+    d_9704fa3dc09c42a7a0bf66eead5b07c8 (o_0f90809347ffd00c5c4ec267cae82254)d_15e635a880194479a43052f8e7b25db2(
+                o_0f90809347ffd00c5c4ec267cae82254, o_32f887da913db5757a826d698ab32141);;
     d_0fca9c5775cb45739917d024a8cecd0c o_0f90809347ffd00c5c4ec267cae82254;
 }
 
@@ -277,8 +307,8 @@ void *internal_realloc(void *o_56fe1a4e066373cd1b73b9b9715d0a69, size_t o_026d48
     d_25f02d83e74b494398384a979fc5905e *o_3ba6675c20df730e5950c075ef7156e1 =
             ((d_25f02d83e74b494398384a979fc5905e *) o_56fe1a4e066373cd1b73b9b9715d0a69) -
             (0x0000000000000002 + 0x0000000000000201 + 0x0000000000000801 - 0x0000000000000A03);
-    d_9704fa3dc09c42a7a0bf66eead5b07c8 (!o_56fe1a4e066373cd1b73b9b9715d0a69)
-        d_0fca9c5775cb45739917d024a8cecd0c d_77f3a163de9b4c9f9ece0fc1e10c8bdd(o_026d4848dc9cd401db1d204c1a67bb5b);;
+    d_9704fa3dc09c42a7a0bf66eead5b07c8 (!o_56fe1a4e066373cd1b73b9b9715d0a69)d_0fca9c5775cb45739917d024a8cecd0c d_77f3a163de9b4c9f9ece0fc1e10c8bdd(
+                o_026d4848dc9cd401db1d204c1a67bb5b);;
     d_9704fa3dc09c42a7a0bf66eead5b07c8 (!o_026d4848dc9cd401db1d204c1a67bb5b) {
         d_ce25df4bb9ec4b338f519302e17e923b(o_56fe1a4e066373cd1b73b9b9715d0a69);
         d_0fca9c5775cb45739917d024a8cecd0c d_cd7b23f6cf614dac81521ef674a2773f;
