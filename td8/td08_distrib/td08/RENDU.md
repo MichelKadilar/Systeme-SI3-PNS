@@ -2,6 +2,11 @@
 
 ## Question 1
 
+Dans toute cette partie, les tailles en octets exprimées dépendent 
+évidemment de si on est en 32 bits ou en 64 bits.
+
+Je considère dans mon cas que je suis en 64 bits.
+
 Ici, la taille de la structure est certainement de 104 octets. On va donc demander 104 octets
 de mémoire à travers le malloc.
 
@@ -103,14 +108,6 @@ L'ordre dans lequel on déclare les éléments dans une structure en C a donc un
 sur la taille totale de la structure.
 
 ## Question 2
-
-///////////////////
-On utiliserait la première zone mémoire libre disponible qui serait assez grande pour 
-accueillir nos 80 + 1 blocs (+1 pour le header). Dans notre cas, il s'agit de la 
-zone 272 qui a été libérée un peu plus tôt. Puisque la mémoire existante suffit à 
-contenir nos 81 blocs, sbrk ne sera pas appelé puisqu'il n'est ici pas nécessaire 
-d'agrandir l'espace mémoire.
-//////////////////
 
 Etant donné que la première zone mémoire libre ne peut contenir que 48 blocs header inclus,
 et qu'il n'y a pas d'autre zone mémoire libre de taille assez grande pour accueillir les
