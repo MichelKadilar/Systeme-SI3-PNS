@@ -33,3 +33,9 @@ Javap :
 ## Exercice 4
 
 Que veut dire "V" dans le descriptor des méthodes avec javap ?
+
+
+
+
+dans le .h est produit les signatures des méthodes qui sont ajoutées en tant que "native"
+dans le java.

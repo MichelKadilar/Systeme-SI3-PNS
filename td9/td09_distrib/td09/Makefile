@@ -44,7 +44,7 @@ all: $(CLS) $(H_FILE) $(EXE)
 	$(MAKE) -C $(C_JNI)
 
 clean:
-	rm -rf $(CLS) $(C_JNI)/*.h *.exe *.so \#* *~
+	rm -rf $(CLS) $(C_JNI)/*.h $(EXE) *.so \#* *~
 	$(MAKE) -C $(C_JNI) clean
 
 test:
