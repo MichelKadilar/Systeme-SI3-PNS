@@ -1,14 +1,182 @@
+# Mini explication générale
+
+On veut pouvoir exécuter du code C/C++ dans un code Java.
+On va donc utiliser l'interface JNI proposée par Java.
+
+Cette interface propose notamment le chargement de bibliothèques dynamiques/partagées C/C++.
+
+Le principe est le suivant :
+
+On a un code Java dans lequel on a des méthodes permettant de charger une bibliothèque 
+partagée dans un programme : ```System.loadLibrary("libraryName");```.
+
+Mais pour pouvoir utiliser les fonctions/méthodes définies dans la bibliothèques partagées,
+il est nécessaire de dire à Java : "telle méthode existe mais sera importée à l'aide 
+d'une bibliothèque partagée". Pour cela, on utilise le mot clé ```native```, par exemple :
+
+```java
+  public static native void printCpp();
+  public native String toString();
+```
+
+signifiant : "Les méthodes printCpp et toString existent mais ne sont pas définies dans
+du code Java, elles seront utilisables grâce à une bibliothèque dynamique qu'on charge".
+
+Ensuite, dans le code Java, ces méthodes s'utilisent comme des méthodes Java classiques.
+
+Si la méthode est statique (comme printCpp), il n'est pas nécessaire de définir une 
+instance d'une classe pour utiliser la méthode, sinon il est nécessaire de définir une
+instance de classe pour pouvoir utiliser la méthode (comme toString).
+
+Auquel cas, les méthodes s'utiliseront ainsi :
+
+Pour printCpp (statique) :
+
+```java
+  NomDeLaClasse.printCpp(); // pas besoin d'instancier une classe pour utiliser une de ses méthodes dans ce cas
+```
+
+&
+
+Pour toString (non-statique) :
+
+```java
+  NomDeLaClasse obj = new NomDeLaClasse();
+  obj.toString(); // Il a été nécessaire dans ce cas de définir une instance de la classe juste avant
+```
+
 # Exercices
 
 noms des fonctions dans le cpp != nom des fonctions dans le java
 
 ## Exercice 1
 
+### .class
+
+Un fichier .class est issu de la réussite de la compilation d'un fichier .java (fichier
+contenant du code java).
+Le .class généré contient des caractères à priori étranges, et parfois, des chaînes de
+caractères lisibles par l'humain. Il peut s'agir de descripteurs de méthodes, de signatures
+de méthodes, en bref, tout ce qui concerne l'interface de chaque méthode.
+Les caractères "illisibles" sont en fait du bytecode Java. Le bytecode Java est un flux ASCII
+(càd une suite de codes ASCII (notamment ceux compris entre 000 et 015 en décimal)) qui
+permet de regrouper les instructions exécutables par une JVM : autrement dit, il s'agit
+du contenu des méthodes, les variables "static", etc.
+
+Le fichier d'avoir un fichier intermédiaire .class permet au programme java d'être
+compilé (donc optimisé d'avance) et rendu en un format plus adapté (le format bytecode
+java) afin d'être interprété plus efficacement par la JVM.
+
+Java -> Bytecode Java -> Assembleur
+
+### .h
+
+Un fichier .h a aussi automatiquement été généré suite à l'exécution de la commande ```make```
+
+On y trouve notamment, écrites en C/C++, toutes les interfaces des méthodes Java déclarées,
+avec des petits commentaires au-dessus des méthodes, indiquant dans quelle classe Java
+la méthode en question a été implémentée (ou déclarée, par exemple dans une interface
+Java ? je ne sais pas).
+
+On remarque que tout en haut du fichier .h, il y a un ```#include "jni.h"```, qui est en
+fait un fichier header emporté par le JDK, contenant toutes les interfaces C/C++ nécessaires à une
+"compatibilité"/correspondance entre Java et C/C++.
+
+### .so
+
+Un fichier .so est un fichier représentant une bibliothèque partagée en C/C++.
+
+Son contenu est du code binaire ET des données (constantes, etc) sous formes de chaînes
+de caractères.
+Ce contenu correspond à des fonctions, des instructions, des variables, des arguments...
+
+Tout ce qui est contenu dans ce fichier peut être appelé par des programmes extérieurs qui
+chargent une bibliothèque partagée C/C++.
+
 ## Exercice 2
+
+Lors de l'exécution, on voit que le chargement de la bibliothèque "libHelloWorld.so" a bien
+fonctionné et que la méthode :
+
+```java
+printCpp();
+```
+
+a bien affiché "World" à la suite du "Hello" affiché par ```System.out.println("Hello");```
 
 ## Exercice 3
 
-pas static, on doit créer une instance
+```cpp
+// Extrait de code fourni dans le sujet
+
+JNIEXPORT void JNICALL
+Java_HelloWorld_printStringToCpp(JNIEnv *env, jclass cl, jstring str)
+{
+// Construction d'une chaîne C/C++ à partir d'une chaîne Java
+const char *cStr = env->GetStringUTFChars(str, 0);
+// Affichage de la chaîne C++
+printf("%s\n", cStr);
+// Libération de la chaîne C++
+env->ReleaseStringUTFChars(str, cStr);
+}
+JNIEXPORT jstring JNICALL
+Java_HelloWorld_stringFromCpp(JNIEnv *env, jobject obj)
+{
+// Construction d'une chaîne Java à partir d'une chaîne C/C++
+return env->NewStringUTF("Chaîne en C");
+}
+```
+
+Dans cet extrait de code, on voit que la deuxième méthode
+
+```cpp
+JNIEXPORT jstring JNICALL Java_HelloWorld_stringFromCpp(JNIEnv *env, jobject obj) 
+```
+
+prend en deuxième paramètre un jobject, et non un jclass comme les autres méthodes
+jusqu'à présent.
+Le fait que la méthode prenne un jobject au lieu d'un jclass en deuxième argument
+signifie que la méthode n'est pas statique et qu'on doit donc créer une instance de
+la classe HelloWorld dans le main() du programme Java afin d'appeler l'équivalent Java
+(```public native String stringFromCpp();```) de la méthode décrite ci-dessus en C++.
+
+Au final, voici comment nous avons procédé pour ajouter les deux méthodes
+```printStringToCpp``` et ```stringFromCpp``` :
+
+- Nous avons ajouté deux méthodes en tant que natives dans le code Java :
+    ```java 
+        public static native void printStringToCpp(String str); // statique car jclass dans le C++
+        public native String stringFromCpp(); // pas statique car jobject dans le C++
+    ```
+- Puis nous avons utilisé ces méthodes dans le main() :
+  ```java
+    HelloWorld hw = new HelloWorld(); // On doit créer un objet pour pouvoir appeler la méthode non-statique stringFromCpp() 
+    HelloWorld.printStringToCpp("toto"); // appel statique
+    String strFromCpp = hw.stringFromCpp(); // hw est une instance de HelloWorld, appel pas statique
+    System.out.println(strFromCpp);
+  ```
+- Ensuite, nous avons régénéré le fichier HelloWorld.h grâce au makefile, ce qui a 
+ajouté les signatures des deux nouvelles méthodes dans le HelloWorld.h
+- Puis nous avons ajouté les deux méthodes C++ à la classe HelloWorld.cpp :
+  ```cpp
+  JNIEXPORT void JNICALL Java_HelloWorld_printStringToCpp(JNIEnv *env, jclass cl, jstring str)
+    {
+    // Construction d'une chaîne C/C++ à partir d'une chaîne Java
+    const char *cStr = env->GetStringUTFChars(str,0);
+    // Affichage de la chaîne C++
+    printf("%s\n", cStr);
+    // Libération de la chaîne C++
+    env->ReleaseStringUTFChars(str,cStr);
+  }
+  
+  JNIEXPORT jstring JNICALL Java_HelloWorld_stringFromCpp(JNIEnv *env, jobject obj)
+  {
+    // Construction d'une chaîne Java à partir d'une chaîne C/C++
+    return env->NewStringUTF("Chaîne en C");
+  }
+  ```
+- Et enfin nous avons régénéré la bibliothèque partagée libHelloWorld.so, toujours à 
+l'aide du makefile.
 
 ##  Exercice 6
 
