@@ -41,7 +41,7 @@ public class HelloWorld {
         sc.close();
     }
 
-    public void test(String string){
+    public static void test(String string){
         System.out.println(string);
     }
 }

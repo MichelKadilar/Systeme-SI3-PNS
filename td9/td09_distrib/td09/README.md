@@ -126,6 +126,14 @@ compatibilité/cohérence/vérification entre les signatures de méthodes défin
 que le programme est censé recevoir, et les signatures de méthodes définies côté C++ qui
 sont censées être mises dans des bibliothèques partagées afin d'être chargée côté Java.
 
+Après avoir écrit les méthodes dans le code C++ avec les mêmes signatures
+que dans le header généré par ```javac -h``` et avec les conventions de jni.h, il est
+alors possible de créer une bibliothèque partagée contenant l'ensemble des méthodes et données
+C++ que l'on veut pouvoir partager avec des programmes Java.
+
+Pour cela, -fpic sur chaque fichier source, puis -shared pour créer la 
+bibliothèque partagée (cf. TP1).
+
 # Exercices
 
 noms des fonctions dans le cpp != nom des fonctions dans le java
@@ -258,6 +266,8 @@ ajouté les signatures des deux nouvelles méthodes dans le HelloWorld.h
   ```
 - Et enfin nous avons régénéré la bibliothèque partagée libHelloWorld.so, toujours à 
 l'aide du makefile.
+
+
 
 ##  Exercice 6
 

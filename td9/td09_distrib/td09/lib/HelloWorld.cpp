@@ -29,7 +29,7 @@ JNIEXPORT void JNICALL Java_HelloWorld_callJavaMethod(JNIEnv *env, jobject obj) 
 // Récupération d'un objet de Metaclasse
 jclass cls = env->GetObjectClass(obj);
 // Calcule de l'identificateur de "void test(String str)"
-jmethodID mid = env->GetMethodID(cls,"test","(Ljava/lang/String;)V");
+jmethodID mid = env->GetStaticMethodID(cls,"test","(Ljava/lang/String;)V");
 if (mid == 0) {
 // Ca a planté !!!
 fprintf(stderr, "Ouille, ça a planté !");
