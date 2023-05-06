@@ -1,5 +1,6 @@
 # Mini explication générale
 
+## Côté Java
 On veut pouvoir exécuter du code C/C++ dans un code Java.
 On va donc utiliser l'interface JNI proposée par Java.
 
@@ -44,6 +45,86 @@ Pour toString (non-statique) :
   NomDeLaClasse obj = new NomDeLaClasse();
   obj.toString(); // Il a été nécessaire dans ce cas de définir une instance de la classe juste avant
 ```
+
+Après avoir fait cela dans le code Java, nous avons terminé la partie Java.
+
+## Côté C/C++
+
+Bien évidemment, si l'on veut utiliser des fonctions/méthodes C/C++ dans un programme Java en les chargeant
+via une bibliothèque partagée C/C++, il faut...écrire ces fonctions/méthodes dans des codes
+C/C++.
+
+Pour cela, il est nécessaire d'avoir des fichiers-code C/C++ et d'y définir des fonctions/méthodes
+telles qu'elles sont définies côté Java. Evidemment, la sythaxe Java et C/C++ ne sont pas
+les mêmes et il y a des choses qui changent entre les langages.
+C'est pour cela qu'a été défini un ensemble d'interfaçages entre Java et C/C++, dans
+un fichier nommé "jni.h" embarqué dans tous les JDK > 9. Ce fichier contient du code C/C++
+et définit l'ensemble des contraintes avec lesquelles doivent être écrites des fonctions/méthodes
+C/C++ afin d'être compatibles avec les prototypes/signatures Java correspondants.
+
+En effet, toutes les fonctions/méthodes C/C++ doivent respecter un certain nombre de règles
+et de conventions afin de pouvoir être utilisées depuis un code Java. "jni.h" les définit, comme
+on l'a dit.
+**Mais où puis-je importer jni.h ?**
+
+En fait, il y a une grande astuce. Java est capable de produire un fichier .h contenant
+tous les prototypes des méthodes définies "native" dans un code source Java.
+Pour cela, on utilise : ```javac -h dossierDeDestination fichierJavaSource.java```.
+
+Ce fichier .h va alors contenir toutes les signatures des méthodes définies comme étant "native"
+dans le Java, mais...écrites en C/C++. Autrement dit, ce fichier .h contient les signatures des méthodes
+côté Java telles qu'elles doivent être utilisées dans le fichier C/C++ afin d'être compatibles et fonctionner 
+une fois mises dans une bibliothèque partagée.
+
+En réalité, ce fichier .h est en quelque sorte nécessaire à l'écriture du fichier C/C++ correspondant
+à ce qui est défini comme "native" dans le code Java, puisque ce fichier .h est garant
+de la cohérence/compatibilité entre les méthodes définies dans le Java et les méthodes
+définies dans le code C/C++;
+
+Exemple :
+
+La méthode Java définie comme suit :
+
+```java
+  public native String toString(); // méthode avec le mot clé native
+```
+
+Après utilisation de "javac -h dossierDest MaClasse.java", on aura un fichier .h contenant :
+
+```h
+  #include <jni.h> 
+  
+  // jni.h est un fichier header embarqué par tous les JDK > 9 et qui contient tous les 
+  // outils nécessaires pour interfaçer une méthode Java en tant que méthode C++
+
+  JNIEXPORT jstring JNICALL toString(JNIEnv *, jobject);
+  
+  // signature de la méthode toString définie dans le Java, mais écrite en C++ avec les
+  // conventions de jni.h dans l'objectif d'être utilisé à travers une bibliothèque 
+  // partagée dans un code Java
+```
+
+Il faut maintenant définir cette méthode dans un code C/C++, on va alors avoir dans un 
+fichier C/C++ (dans mon cas C++) :
+
+```cpp
+    #include "toto.h" // fichier contenant les prototypes générés par la commande javac -h
+
+  JNIEXPORT jstring JNICALL Java_HelloWorld_toString(JNIEnv *env, jobject obj) {
+      ...
+      ...
+      ...
+      corps de la méthode
+      ...
+      ...
+      ...
+  }
+```
+
+Dans le code C/C++, le fichier header généré par ```javac -h``` est donc garant de la 
+compatibilité/cohérence/vérification entre les signatures de méthodes définies côté Java
+que le programme est censé recevoir, et les signatures de méthodes définies côté C++ qui
+sont censées être mises dans des bibliothèques partagées afin d'être chargée côté Java.
 
 # Exercices
 
