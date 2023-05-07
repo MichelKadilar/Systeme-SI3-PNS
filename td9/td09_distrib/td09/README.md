@@ -554,6 +554,28 @@ prototype "native" Java).
 
 ## Exercice 7
 
+Cet exercice concerne uniquement du code Java.
+
+Cf. le code du fichier Exo1.java, présent dans les fichiers du dossier 
+td9/td09_distrib/td09.
+
+**Avant Java 9**, technique "bricolage" et qui pourrait ne pas marcher 
+(bien que cela semble marcher tout le temps, mais la documentation ne définit pas le
+format de la chaîne de caractère retournée par "getName()") :
+
+```java
+  public static long getProcessIDBeforeJava8(){
+    return Long.parseLong(ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
+  }
+```
+
+**Après Java 9**, technique beaucoup plus élégante et qui marche tout le temps :
+
+```java
+  public static long getProcessIDAfterJava8(){
+    return ProcessHandle.current().pid();
+  }
+```
 
 
 # Questions et Remarques

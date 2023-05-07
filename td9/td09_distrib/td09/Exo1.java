@@ -4,11 +4,11 @@ import java.lang.management.RuntimeMXBean;
 
 public class Exo1 {
 
-    public static long getProcessIDBeforeJava8(){
+    public static long getProcessIDBeforeJava9(){
         return Long.parseLong(ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
     }
 
-    public static long getProcessIDAfterJava8(){
+    public static long getProcessIDAfterJava9(){
             return ProcessHandle.current().pid();
     }
 
