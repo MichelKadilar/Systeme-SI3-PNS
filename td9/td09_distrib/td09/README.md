@@ -5,7 +5,8 @@
 On veut pouvoir exécuter du code C/C++ dans un code Java.
 On va donc utiliser l'interface JNI proposée par Java.
 
-Cette interface propose notamment le chargement de bibliothèques dynamiques/partagées C/C++.
+Cette interface propose notamment des outils permettant d'interagir avec des éléments 
+contenus dans une bibliothèque partagée C/C++.
 
 Le principe est le suivant :
 
@@ -13,7 +14,7 @@ On a un code Java dans lequel on a des méthodes permettant de charger une bibli
 partagée dans un programme : ```System.loadLibrary("libraryName");```.
 
 Mais pour pouvoir utiliser les fonctions/méthodes définies dans la bibliothèques partagées,
-il est nécessaire de dire à Java : "telle méthode existe mais sera importée à l'aide
+il est nécessaire de dire à Java : "telle méthode existe mais sera utilisable à l'aide
 d'une bibliothèque partagée". Pour cela, on utilise le mot clé ```native```, par exemple :
 
 ```java
