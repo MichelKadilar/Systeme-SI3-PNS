@@ -577,26 +577,110 @@ format de la chaîne de caractère retournée par "getName()") :
   }
 ```
 
+Ces deux codes permettent donc d'obtenir le PID du processus exécutant le programme.
+
+Mais on aimerait pouvoir utiliser un appel système UNIX natif (norme POSIX) : getpid() afin
+de récupérer l'ID du processus exécutant le programme.
+
+## Exercice 8
+
+Dans cet exercice, on doit donc créer un code C++ faisant un appel à getpid(), puis nous
+devons créer une bibliothèque partagée contenant la méthode faisant cet appel getpid(),
+puis nous devons créer un prototype "native" de la méthode faisant cet appel, avant de 
+charger cette bibliothèque partagée dans un code Java, sans oublier ensuite de faire un 
+appel à la méthode définie "native" dans le code Java.
+
+Pour être certain de la conformité lorsqu'on va vouloir produire une bibliothèque partagée 
+contenant la méthode voulue, il vaut mieux d'abord définir le prototype "native" dans le code Java,
+puis produire le fichier .h correspondant qui nous donnera par la même occasion des
+informations sur la manière dont nous devons définir la signature de notre méthode dans le
+code C++ afin qu'il soit compatible/utilisable dans le code Java par un appel à la méthode
+dans la bibliothèque partagée.
+
+### Code Java :
+
+```java
+  public class GetPid {
+    public static native long getPid(); // on définit le prototype "native" de la méthode getPid() à implémenter dans le C++.
+
+    static {
+            System.out.print("Loading Get Pid native library...");
+            System.loadLibrary("GetPid"); // libGetPid.so est le nom de la bibliothèque partagée
+            System.out.println("done.");
+        }
+
+       public static void main(String args[]){
+               System.out.println(getPid()); // on utilise la méthode getPid()
+       }
+  }
+```
+
+On compile le code Java pour produire GetPid.class : ```javac -g GetPid.java```
+
+Puis on produit "GetPid.h" : ```javac -h ./lib GetPid``` (GetPid permet d'aller chercher GetPid.class).
+
+On va voir le contenu de GetPid.h :
+
+```h
+  JNIEXPORT jlong JNICALL Java_GetPid_getPid(JNIEnv *, jclass);
+```
+
+On va alors copier cette signature de méthode dans le code C++ qu'on veut créer (GetPid.cpp) :
+
+```cpp
+  #include <sys/types.h>
+  #include <unistd.h>
+  #include <stdio.h>
+  #include "GetPid.h"
+  
+  JNIEXPORT jlong JNICALL Java_GetPid_getPid(JNIEnv *, jclass) { // pid_t = long int
+      return getpid();
+  }
+```
+
+Puis, on crée une bibliothèque partagée ```libGetPid.so``` contenant cette méthode :
+
+* On doit pour cela légèrement modifier le makefile situé dans le dossier 
+td9/td09_distrib/td09/lib :
+```makefile 
+ # on ajoute libGetPid.so à la liste des bibliothèques partagée à créer
+ TARGET=libHelloWorld.so libGetPid.so
+ 
+ all: $(TARGET)
+ 
+ lib%.so: %.o # on ajoute lib avant %.so
+	$(CC) -Wl,-soname,$@ -shared -o $@ $<
+```
+
+* Puis on utilise la commande ```make``` dans le dossier : td9/td09_distrib/td09/ afin
+d'exécuter la règle "all" du makefile situé dans ce dossier-là.
+
+Puis, il suffit d'exécuter le programme Java : ```java GetPid``` (exécute GetPid.class).
 
 # Questions et Remarques
 
+## Questions
+
 D'où vient le préfixe : "Java_HelloWorld_" ?
-
-jclass -> statique
-jobject -> pas statique
-
-$(MAKE) -> on exécute le makefile
--C directory -> on change de répertoire courant
-
-$(MAKE) -C directory -> On exécute des commandes du makefile en changeant
-de répertoire courant
-
-Javap :
--s -> Prints internal type signatures.
-
--p -> Shows all classes and members
 
 ## Exercice 4
 
 Que veut dire "V" dans le descriptor des méthodes avec javap ?
 -> Void
+
+## Remarques
+
+jclass -> statique
+jobject -> pas statique
+
+$(MAKE) -> on exécute la règle "all" d'un makefile
+-C directory -> on change de répertoire courant
+
+$(MAKE) -C directory -> On exécute la règle "all" du makefile situé dans le répertoire 
+"directory"
+
+Javap :
+
+-s -> Prints internal type signatures.
+
+-p -> Shows all classes and members
