@@ -1,6 +1,7 @@
 # Mini explication générale
 
 ## Côté Java
+
 On veut pouvoir exécuter du code C/C++ dans un code Java.
 On va donc utiliser l'interface JNI proposée par Java.
 
@@ -8,11 +9,11 @@ Cette interface propose notamment le chargement de bibliothèques dynamiques/par
 
 Le principe est le suivant :
 
-On a un code Java dans lequel on a des méthodes permettant de charger une bibliothèque 
+On a un code Java dans lequel on a des méthodes permettant de charger une bibliothèque
 partagée dans un programme : ```System.loadLibrary("libraryName");```.
 
 Mais pour pouvoir utiliser les fonctions/méthodes définies dans la bibliothèques partagées,
-il est nécessaire de dire à Java : "telle méthode existe mais sera importée à l'aide 
+il est nécessaire de dire à Java : "telle méthode existe mais sera importée à l'aide
 d'une bibliothèque partagée". Pour cela, on utilise le mot clé ```native```, par exemple :
 
 ```java
@@ -25,7 +26,7 @@ du code Java, elles seront utilisables grâce à une bibliothèque dynamique qu'
 
 Ensuite, dans le code Java, ces méthodes s'utilisent comme des méthodes Java classiques.
 
-Si la méthode est statique (comme printCpp), il n'est pas nécessaire de définir une 
+Si la méthode est statique (comme printCpp), il n'est pas nécessaire de définir une
 instance d'une classe pour utiliser la méthode, sinon il est nécessaire de définir une
 instance de classe pour pouvoir utiliser la méthode (comme toString).
 
@@ -73,7 +74,7 @@ Pour cela, on utilise : ```javac -h dossierDeDestination fichierJavaSource.java`
 
 Ce fichier .h va alors contenir toutes les signatures des méthodes définies comme étant "native"
 dans le Java, mais...écrites en C/C++. Autrement dit, ce fichier .h contient les signatures des méthodes
-côté Java telles qu'elles doivent être utilisées dans le fichier C/C++ afin d'être compatibles et fonctionner 
+côté Java telles qu'elles doivent être utilisées dans le fichier C/C++ afin d'être compatibles et fonctionner
 une fois mises dans une bibliothèque partagée.
 
 En réalité, ce fichier .h est en quelque sorte nécessaire à l'écriture du fichier C/C++ correspondant
@@ -104,24 +105,25 @@ Après utilisation de "javac -h dossierDest MaClasse.java", on aura un fichier .
   // partagée dans un code Java
 ```
 
-Il faut maintenant définir cette méthode dans un code C/C++, on va alors avoir dans un 
+Il faut maintenant définir cette méthode dans un code C/C++, on va alors avoir dans un
 fichier C/C++ (dans mon cas C++) :
 
 ```cpp
-    #include "toto.h" // fichier contenant les prototypes générés par la commande javac -h
+    #include
+"toto.h" // fichier contenant les prototypes générés par la commande javac -h
 
-  JNIEXPORT jstring JNICALL Java_HelloWorld_toString(JNIEnv *env, jobject obj) {
-      ...
-      ...
-      ...
-      corps de la méthode
-      ...
-      ...
-      ...
-  }
+JNIEXPORT jstring JNICALL Java_HelloWorld_toString(JNIEnv *env, jobject obj) {
+...
+...
+...
+corps de la méthode
+...
+...
+...
+}
 ```
 
-Dans le code C/C++, le fichier header généré par ```javac -h``` est donc garant de la 
+Dans le code C/C++, le fichier header généré par ```javac -h``` est donc garant de la
 compatibilité/cohérence/vérification entre les signatures de méthodes définies côté Java
 que le programme est censé recevoir, et les signatures de méthodes définies côté C++ qui
 sont censées être mises dans des bibliothèques partagées afin d'être chargée côté Java.
@@ -131,8 +133,50 @@ que dans le header généré par ```javac -h``` et avec les conventions de jni.h
 alors possible de créer une bibliothèque partagée contenant l'ensemble des méthodes et données
 C++ que l'on veut pouvoir partager avec des programmes Java.
 
-Pour cela, -fpic sur chaque fichier source, puis -shared pour créer la 
+Pour cela, -fpic sur chaque fichier source, puis -shared pour créer la
 bibliothèque partagée (cf. TP1).
+
+## Quelques explications utiles sur l'API :
+
+Dans les méthodes C/C++ de ce genre :
+
+```cpp
+  jmethodID mid = env->GetStaticMethodID(cls, "test", "(Ljava/lang/String;)V");
+```
+
+Le troisième paramètre est le descripteur de méthode, qu'on peut obtenir grâce
+à la commande ```javap -s -p VotreClasseCompilee```, qui va en fait chercher "VotreClasseCompilee.class"
+et en extraire les informations nécessaires.
+Un descripteur de méthode contient notamment les paramètres que prend une méthode, ainsi
+que son type de retour.
+Les descripteurs sont de la forme : ```(quelqueChose)autreChose.```
+
+`(quelqueChose)` sera alors l'ensemble des paramètres pris par la méthode, et `autreChose`
+sera le type de retour de la méthode.
+
+Dans l'exemple ci-dessus :
+
+```cpp
+  (quelqueChose)autreChose = (Ljava/lang/String;)V
+```
+
+On sait alors que la méthode "test" prend en paramètre une String et qu'elle renvoie
+un void (V = void).
+À noter que ```Lsomething``` signifie qu'on parle d'une classe Java. Dans notre cas,
+la classe String. Autrement dit, on prend ici en paramètre un argument du type de la classe
+String.
+
+Bien entendu, divers types "par défaut" de Java sont définis comme suit :
+
+* Z = boolean
+* B = byte
+* C = char
+* S = short
+* I = int
+* J = long
+* F = float
+* D = double
+* [type = tableau contenant des éléments de type "type".
 
 # Exercices
 
@@ -244,8 +288,8 @@ Au final, voici comment nous avons procédé pour ajouter les deux méthodes
     String strFromCpp = hw.stringFromCpp(); // hw est une instance de HelloWorld, appel pas statique
     System.out.println(strFromCpp);
   ```
-- Ensuite, nous avons régénéré le fichier HelloWorld.h grâce au makefile, ce qui a 
-ajouté les signatures des deux nouvelles méthodes dans le HelloWorld.h
+- Ensuite, nous avons régénéré le fichier HelloWorld.h grâce au makefile, ce qui a
+  ajouté les signatures des deux nouvelles méthodes dans le HelloWorld.h
 - Puis nous avons ajouté les deux méthodes C++ à la classe HelloWorld.cpp :
   ```cpp
   JNIEXPORT void JNICALL Java_HelloWorld_printStringToCpp(JNIEnv *env, jclass cl, jstring str)
@@ -264,20 +308,261 @@ ajouté les signatures des deux nouvelles méthodes dans le HelloWorld.h
     return env->NewStringUTF("Chaîne en C");
   }
   ```
-- Et enfin nous avons régénéré la bibliothèque partagée libHelloWorld.so, toujours à 
-l'aide du makefile.
+- Et enfin nous avons régénéré la bibliothèque partagée libHelloWorld.so, toujours à
+  l'aide du makefile.
 
+## Exercice 4
 
+### Côté Java :
 
-##  Exercice 6
+```java
+    public static void test(String string){
+        System.out.println(string);
+    }
+```
+
+On remarque qu'on n'a pas défini un prototype "native" de cette méthode dans la classe Java.
+C'est normal, un prototype "native" est défini uniquement dans le cas où la méthode
+n'est pas déclarée/implémentée côté Java mais qu'elle doit correspondre à la signature
+d'une méthode déclarée/implémentée côté C/C++ (une méthode censée être présente dans une
+bibliothèque partagée qu'on charge dans le code Java).
+
+Ici, nous voulons faire l'inverse. Ce n'est pas le Java qui fait appel à un code C/C++,
+mais un code C++ qui veut faire appel à un code Java.
+Il suffit alors côté Java de définir la méthode test comme ci-dessus (c'est un exemple).
+
+### Côté C++ :
+
+On ajoute ce code à HelloWorld.cpp :
+
+```cpp
+JNIEXPORT void JNICALL
+Java_HelloWorld_callJavaMethod(JNIEnv *env, jobject obj) {
+  // Récupération d'un objet de Metaclasse
+  jclass cls = env->GetObjectClass(obj);
+  // Calcule de l'identificateur de "void test(String str)"
+  jmethodID mid = env->GetStaticMethodID(cls,"test","(Ljava/lang/String;)V");
+  if (mid == 0) {
+    // Ca a planté !!!
+    fprintf(stderr, "Ouille, ça a planté !");
+  } else {
+    // Tout va bien, l'appel peut aboutir.
+    jstring str = env->NewStringUTF("Ceci est un paramètre créé en C/C++");
+    env->CallVoidMethod(obj,mid,str);
+  }
+  return;
+}
+```
+
+Quelques explications :
+
+L'argument env présent dans toutes les méthodes "JNI" propose divers outils afin
+d'interagir avec un code Java depuis le C++.
+En effet, on voit notamment l'utilisation des méthodes :
+
+```cpp
+  jclass cls = env->GetObjectClass(obj);
+env->GetStaticMethodID(cls, "test", "(Ljava/lang/String;)V");
+```
+
+Le premier appel permet de récupérer la classe correspondante à l'objet qui a appelé la
+méthode callJavaMethod() dans le code Java.
+
+On voit que ce premier appel nous sert dans le deuxième appel (premier argument), qui
+permet de récupérer l'ID d'une méthode statique du code Java (dans notre cas la méthode
+test, prenant en paramètre une String Java).
+
+Le premier appel nous sert donc à récupérer la classe correspondante à l'objet qui a appelé
+la méthode ```callObjectClass(obj)```.
+Le deuxième appel permet alors de dire "Je cherche dans le code Java la méthode statique test".
+
+Dans le code Java, la méthode test ne pourra alors être appelée que statiquement :
+```HelloWorld.test(str)```, et non pas :
+
+```cpp
+  HelloWorld hw = new HelloWorld();
+hw.test(str); // pas un appel statique
+```
+
+La méthode test doit donc être statique dans le code Java et avoir le même prototype
+(même argument que dans le code fourni ci-dessus, c'est-à-dire une String Java).
+Aucune spécification n'est donnée par rapport au type de retour, on peut alors retourner
+ce qu'on veut dans la méthode test. Dans notre cas, c'est un void.
+
+Si jamais la méthode test n'est pas statique, la méthode ```getStaticMethodID()``` va
+échouer.
+
+Il existe d'autres appels possibles avec la variable ```env```, tel que :
+
+```cpp
+  jclass cls = env->GetObjectClass(obj);
+env->getMethodId(cls, "test", "(Ljava/lang/String;)V")
+```
+
+qui permet de récupérer l'ID d'une méthode test non-statique
+(qui doit donc être appelée par une instance de la classe)
+
+La méthode test doit alors être non-statique, sinon ```getMethodId()``` échouera.
+
+Cette méthode a le même prototype que ```getStaticMethodId()```
+
+## Exercice 5
+
+### Côté C++ :
+
+```cpp
+  JNIEXPORT jstring JNICALL
+Java_HelloWorld_toString(JNIEnv *env, jobject obj) {
+char buffer[256];
+// Obtention de la Metaclasse de HelloWorld
+jclass cls = env->GetObjectClass(obj);
+// Calcul de l'identificateur de l'attribut entier de type int
+jfieldID fid = env->GetFieldID(cls, "entier", "I");
+// Récupération de la valeur entière de l'attribut
+int a = env->GetIntField(obj, fid);
+// Modification de la valeur entière de l'attribut
+env->SetIntField(obj, fid, a + 1);
+// Deuxieme récupération de la valeur entière de l'attribut
+a = env -> GetIntField(obj, fid);
+// Génération d'une chaîne contenant la valeur de l'attribut
+sprintf(buffer, "Hello [a = %d]", a);
+// On retourne un objet Java de chaîne de caractères
+return env->NewStringUTF(buffer);
+}
+```
+
+Ce qui nous intéresse surtout sont ces lignes :
+
+```cpp
+  jfieldID fid = env->GetFieldID(cls, "entier", "I");
+// Récupération de la valeur entière de l'attribut
+int a = env->GetIntField(obj, fid);
+// Modification de la valeur entière de l'attribut
+env->SetIntField(obj, fid, a + 1);
+// Deuxieme récupération de la valeur entière de l'attribut
+a = env -> GetIntField(obj, fid);
+```
+
+La première ligne, à la manière de la récupération de l'ID d'une méthode, permet de
+récupérer l'ID d'un attribut non-statique nommé "entier" qui est de type "I" = int.
+
+La deuxième ligne permet de récupérer l'entier correspondant à l'ID récupéré précédemment
+et de stocker sa valeur dans une variable C++ entière.
+
+La troisième ligne permet de modifier la valeur de cet entier : pour cela, on lui donne
+l'ID de l'entier à modifier ainsi que la nouvelle valeur à attribuer.
+
+Enfin, on récupère encore une fois en C++ la valeur de la variable entière après sa
+mise à jour côté Java grâce à l'ID de l'attribut entier.
+
+Cela permet alors de mettre en évidence une "communication" entre les programmes Java et C++
+lors de l'exécution du programme Java chargeant la bibliothèque partagée dans laquelle
+se trouve la méthode contenant ces lignes de code.
+
+Voici quelques étapes décrivant ce qu'il se passe :
+
+* On produit une bibliothèque partagée contenant entre autre cette méthode.
+* On exécute le programme Java.
+* Le programme Java charge la bibliothèque contenant cette méthode.
+* Le programme Java fait appel à cette méthode lors de son exécution.
+* Cette méthode C++ va récupérer la valeur de l'entier "entier" dans le code Java et
+  va mettre à jour cette valeur.
+* La valeur de cet entier est mise à jour dans le programme Java toujours en cours
+  d'exécution.
+
+## Exercice 6
 
 jclass car statique
 
+On doit ajouter la méthode suivante à notre code C++ :
+
+```cpp
+  static int fib(int n) {
+if (n < 2)
+return n;
+else
+return fib(n-1) + fib(n-2);
+}
+```
+
+Cette méthode permet de calculer la suite de fibonacci à partir d'un entier n.
+
+On ne peut pas ajouter cette méthode telle quelle dans notre code C++ si on veut l'utiliser
+dans notre programme Java.
+Il faut alors adapter ce code grâce aux conventions et règles de JNI afin de rendre
+compatibles cette méthode à un appel de cette méthode par un code Java.
+
+On remarque qu'elle est **statique**, on va devoir prendre cela en compte dans notre
+travail.
+
+Une manière de procéder est d'abord d'ajouter la signature de cette méthode en tant que
+méthode native dans le code Java :
+
+```java
+   public static native int fib(int n);
+```
+
+On peut ensuite générer à nouveau le fichier HelloWorld.h à partir de HelloWorld.java,
+cela nous permettra d'avoir directement la signature :
+```public static native int fib(int n);```, mais avec les bonnes conventions JNI pour
+assurer l'interopérabilité Java/C++ : ```javac -h ./lib HelloWorld```
+
+Dans le fichier HelloWorld.h, on retrouve alors :
+
+```h
+  JNIEXPORT jint JNICALL Java_HelloWorld_fib(JNIEnv *, jclass, jint);
+```
+
+On remarque que la méthode prend en deuxième paramètre un jclass, signifiant que cette
+méthode est statique (cela correspond donc bien à ce qui est attendu pour la
+méthode fib(int n), elle-même statique dans le sujet & dans le prototype Java).
+
+Dans le code C++ implémentant le contenu de la méthode ```static int fib(int n)```, on
+va donc devoir définir le contenu de la méthode fib(int n) dans une méthode ayant pour
+signature :
+
+```h
+  JNIEXPORT jint JNICALL Java_HelloWorld_fib(JNIEnv *, jclass, jint);
+```
+
+On définit alors :
+
+```cpp
+JNIEXPORT int JNICALL Java_HelloWorld_fib(JNIEnv *env, jclass cl, jint n){
+    if (n < 2)
+        return n;
+    else
+        return Java_HelloWorld_fib(env, cl, n-1) + Java_HelloWorld_fib(env, cl, n-2);
+}
+```
+
+Qui reproduit le code de la méthode ```static int fib(int n)``` définie dans le sujet.
+
+Pour finir, il faut donc reconstruire la bibliothèque partagée C/C++ contenant maintenant
+cette nouvelle méthode fib(int n) (grâce au makefile).
+
+Puis, évidemment, utiliser la méthode fib(int n) dans le code Java, par exemple :
+
+```java
+  System.out.println("Fibonnaci result for fib(" + hw.entier + ") : " + HelloWorld.fib(6));
+```
+
+On voit qu'on peut faire un appel statique à la méthode fib(int n) dans le code Java,
+c'est normal, puisque la méthode est définie comme étant statique, à la fois dans le C++
+(avec le jclass que prend la méthode ```Java_HelloWorld_fib```, mais aussi dans le
+prototype "native" Java).
+
+## Exercice 7
+
+
+
 # Questions et Remarques
+
+D'où vient le préfixe : "Java_HelloWorld_" ?
 
 jclass -> statique
 jobject -> pas statique
- 
+
 $(MAKE) -> on exécute le makefile
 -C directory -> on change de répertoire courant
 
@@ -285,16 +570,11 @@ $(MAKE) -C directory -> On exécute des commandes du makefile en changeant
 de répertoire courant
 
 Javap :
--s  -> Prints internal type signatures. 
+-s -> Prints internal type signatures.
 
--p -> Shows all classes and members 
+-p -> Shows all classes and members
 
 ## Exercice 4
 
 Que veut dire "V" dans le descriptor des méthodes avec javap ?
-
-
-
-
-dans le .h est produit les signatures des méthodes qui sont ajoutées en tant que "native"
-dans le java.
+-> Void
