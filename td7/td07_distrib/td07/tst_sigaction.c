@@ -13,13 +13,17 @@ void on_signal(int sig) {
         nb_sigint_received++;
     }
     if (nb_sigint_received == NB_SIGINT_WANTED) {
+        write(1, "terminé\n", sizeof(char)*8);
         kill(getpid(), SIGKILL);
     }
+
 }
 
 int main(void) {
     struct sigaction sigact;
     sigset_t msk_int, msk_segv;
+    sigset_t toto;
+    sigact.sa_flags = 0;
 
     // On gère notre ensemble de masques de signaux
     sigemptyset(&msk_int);
