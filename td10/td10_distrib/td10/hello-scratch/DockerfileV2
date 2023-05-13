@@ -1,0 +1,6 @@
+FROM scratch
+
+LABEL AUTHOR=MichelKadilar
+
+LABEL VERSION=Exo1
+

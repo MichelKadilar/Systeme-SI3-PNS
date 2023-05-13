@@ -1,0 +1,11 @@
+FROM alpine:3.17.3
+
+LABEL AUTHOR=MichelKadilar
+
+LABEL VERSION=Exo1
+
+RUN apk add gcompat
+
+COPY hello_without_libc.exe .
+
+CMD ["./hello_without_libc.exe"]

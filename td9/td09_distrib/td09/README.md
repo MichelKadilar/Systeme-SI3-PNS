@@ -664,6 +664,8 @@ Puis, il suffit d'exécuter le programme Java : ```java GetPid``` (exécute GetP
 
 D'où vient le préfixe : "Java_HelloWorld_" ?
 
+C'est une procédure normalisée par JNI (pas un comportement choisi par M. LAVIROTTE)
+
 ## Exercice 4
 
 Que veut dire "V" dans le descriptor des méthodes avec javap ?
