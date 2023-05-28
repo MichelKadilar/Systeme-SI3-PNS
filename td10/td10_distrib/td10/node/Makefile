@@ -4,7 +4,7 @@ build:
 	docker build -t node-app .
 
 run:
-	npm start -p 8888:8080
+	docker run -p 8888:8080 node-app # docker run -p hostPort:containerPort
 
 clean:
 	docker images -a | grep none | awk '{ print $$3; }' | xargs -t 2>/dev/null docker rmi

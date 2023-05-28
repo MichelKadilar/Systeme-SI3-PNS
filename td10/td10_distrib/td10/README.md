@@ -186,6 +186,161 @@ Dans l'ensemble, cela reste tout de même assez lourd (voire très lourd) pour u
 à l'image hello world par défaut qui ne fait "que" 13.3 Ko.
 
 
+On le met dans le dockerfile quand on veut que ça soit présent dans l'instance avec une valeur par défaut
+quitte à être surchargé au moment de l'exécution
+
+Si je crée une variable d'env pour stipuler dans quel dossier je dois écrire -> dans le dockerfile
+
+## Exercice 6
+
+On remplace la première ligne du dockerfile par :
+
+```FROM node:18.16.0-alpine3.17```
+
+## Exercice 7
+
+Dans le fichier server.js :
+
+```
+const PORT = 8080;
+const HOST = '0.0.0.0';
+app.listen(PORT, HOST, () => {
+```
+
+crée un serveur NodeJS en localhost sur le port 8080 et permet d'écouter à cette adresse IP
+sur le port 8080.
+Par définition, cela signifie que tout serveur NodeJS crée avec ce fichier, sera en exécution 
+sur le port 8080.
+
+Si maintenant, on désire lancer à la fois un serveur NodeJS dans un conteneur et sur notre 
+machine (machine hôte, donc), tout en pouvant récupérer tout ce qui passe sur le serveur NodeJS 
+de notre conteneur, il va nous falloir un petit peu ruser.
+En effet, le conteneur Docker est un animal très dangereux, se nourrissant exclusivement de 
+noyaux unix et de ports ouverts.
+
+Plus sérieusement :
+
+Si je me trouve sur ma machine à moi, que je lance tel quel (avec le fichier server.js) un 
+serveur NodeJS sur ma machine hôte, alors ce serveur va se lancer sur le port 8080 de ma 
+machine fidèlement au fichier server.js. Très bien, le serveur est en fonctionnement sur 
+le port 8080.
+
+Si maintenant, je décide de lancer un serveur NodeJS avec le même fichier server.js, mais 
+dans un conteneur, alors il se trouve que ce serveur aussi, sera en exécution sur le port 8080,
+non pas de ma machine hôte, mais **du conteneur**. Cela fonctionne également très bien.
+
+Si maintenant, je décide que je veux avoir accès sur ma machine hôte à ce qu'il se passe sur 
+le serveur NodeJS du conteneur, comment puis-je faire ?
+
+Une solution, celle qu'on adopte, est simplement de faire correspondre un des ports du conteneur 
+(celui sur lequel tourne le serveur NodeJS), à un des ports de ma machine hôte, autrement dit,
+cela revient à rediriger tout le trafic qui a lieu sur un port, dans un autre.
+Plus simplement, tout ce qu'il va se passer sur un port sera accessible sur un autre port.
+
+Le problème, c'est que si par exemple, je veux que le trafic de mon serveur NodeJS du conteneur 
+(qui est donc sur le port 8080 du conteneur) soit redirigé vers le port du même numéro (8080) 
+sur ma machine hôte, il va y avoir un problème : j'ai déjà lancé un serveur NodeJS sur ma 
+machine hôte, et celui-ci tourne déjà sur le port 8080 de ma machine, donc si je redirige le 
+flux/trafic du serveur NodeJS du conteneur sur ce port, il y aura des conflits et mon 
+information sera compliquée à retrouver.
+
+On a encore une fois une solution à ce problème : rediriger le trafic du port 8080 du conteneur, 
+vers un port d'un autre numéro de ma machine hôte. En effet, puisque le 8080 est déjà occupé 
+avec un autre serveur NodeJS, on n'a qu'à rediriger le flux du port 8080 du conteneur, sur un 
+autre port de ma machine, par exemple choisissons le port 8888, pour le moment non utilisé.
+
+
+Finalement, pour faire tourner deux serveurs NodeJS un sur une machine hôte, un autre dans un
+conteneur docker, qui tournent originellement sur le même port 8080), et pouvoir écouter sur 
+la machine hôte ce qu'il se passe sur le port du serveur NodeJS du conteneur, nous avons réalisé
+les étapes suivantes :
+
+- Lancer un serveur NodeJS sur le port 8080 de ma machine
+- Lancer un serveur NodeJS sur le port 8080 du conteneur
+- Mapper le port/Rediriger le trafic du port 8080 du conteneur vers le port 8888 de ma machine hôte de sorte que le trafic
+du serveur NodeJS du conteneur soit accessible sur la machine hôte, pour éviter les conflits
+- On n'a plus qu'à lire ce qui arrive sur le port 8888 de ma machine pour savoir ce qui se passe 
+sur le serveur NodeJS du conteneur (qui tourne toujours sur le port 8080 malgré tout, puisqu'il 
+s'agit d'une redirection !)
+
+Concentrons-nous sur cette histoire de redirection/mapping. 
+Cela est réalisable grâce à la commande :
+
+```makefile
+docker run -p 8888:8080 node-app # docker run -p hostMachinePort:containerPort imageName
+```
+
+Ici, on mappe le port 8080 du conteneur sur le port 8888 de ma machine = on redirige tout ce 
+qui arrive sur le port 8080 du conteneur sur le port 8888 de ma machine.
+
+Cela se fait donc lors du lancement d'un conteneur docker, avec l'option -p :
+
+```-p hostMachinePort:containerPort``` est ce qu'il faut retenir
+
+```-p``` est l'abréviation pour ```--publish```, qui signifie donc "publier un port du conteneur 
+sur une machine externe" dans notre cas, autrement dit, mapper un port du conteneur sur un 
+port de ma machine.
+
+Vous avez peut-être également aperçu l'instruction EXPOSE 8080 dans le dockerfile de cet 
+exercice, voyons voir à quoi cela correspond.
+
+### Différences entre EXPOSE et -p
+
+#### EXPOSE
+
+EXPOSE est utilisé comme instruction de "documentation" dans le dockerfile, permettant d'indiquer
+quels ports sont susceptibles d'être utilisés par des services à l'intérieur de notre conteneur 
+une fois crée.
+
+
+**Début de la partie dont je ne suis pas sûr**
+
+---
+EXPOSE a toutefois une action particulière : il rend accessible le port indiqué, 
+par exemple 8080, avec ```EXPOSE 8080```, non pas à la machine hôte, mais à d'autres 
+conteneurs (du même moteur docker).
+---
+**Fin de la partie dont je ne suis pas sûr**
+
+
+Il est souvent utilisé de manière "statique" à l'intérieur du dockerfile, ainsi :
+
+```EXPOSE containerPortNumber```
+
+Bien qu'il puisse également être utilisé dynamiquement avec 
+```docker run -expose=portNumber imageName```
+
+#### -p
+
+```-p``` est l'abréviation pour ```--publish```, qui signifie "publier un port du conteneur
+sur l'hôte" dans notre cas, autrement dit, mapper un port du conteneur sur un port de ma machine.
+Cette option s'utilise ainsi : ```docker run -p hostMachinePort:containerPort imageName```, permettant
+alors de rediriger sur un port de la machine hôte tout le trafic qui arrive sur un port du 
+conteneur.
+Si on n'utilise pas cette version : ```-p hostMachinePort:contiainerPort```, 
+mais celle-ci : ```-p containerPort```, alors, cela va faire un mapping automatique vers le même
+numéro de port sur la machine hôte.
+
+Mapper un port sur un autre = rediriger tout le trafic qui arrive sur un port vers un autre.
+
+A savoir qu'utiliser ```-p``` va automatiquement faire des ```-expose=containerPortNumber``` 
+dynamique avec le même numéro de port que ce qui a été spécifié pour le conteneur dans ```-p```.
+
+#### Principale différence
+
+La principale différence entre ```-p``` et ```EXPOSE``` est que ```-p``` rend accessible un port
+d'un conteneur par des machines "externes" (toute machine qui n'est pas un conteneur exécuté par 
+le même moteur docker que ce conteneur, par exemple, ma machine hôte, qui n'est tout simplement
+pas un conteneur du tout), tandis que ```EXPOSE``` est davantage à titre informatif et est 
+utilisé pour rendre accessible un port d'un conteneur par d'autres conteneurs du même moteur
+docker.
+
+
+
+
+
+
+
 
 
 
