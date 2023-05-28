@@ -351,6 +351,58 @@ build:
 	docker build -t node-app -f Dockerfile . # Il faut être dans le répertoire node pour que ça fonctionne
 ```
 
+## Exercice 8
+
+Nos modifications arrivent dès la première couche avec notamment le chargement de l'image de 
+base de notre conteneur.
+Par la suite, nos propres modifications sont reprises à la 5ème couche, avec 
+l'instruction : ```WORKDIR /app```.
+
+COPY est quant à lui utiisé à deux reprises dans le Dockerfile :
+
+```COPY package*.json .``` et ```COPY . .```.
+
+Dans le premier cas, cela signifie que nous allons copier tous les fichiers du repertoire courant
+(celui dans lequel se trouve le dockerfile) commençant par "package", suivi de quelque chose, 
+et finissant par ".json", dans le repertoire courant du conteneur (en l'occurrence, /app, 
+puisque l'instruction ```WORKDIR /app``` est exécutée avant l'instruction copie).
+
+Dans le deuxième cas, on copie carrément tout le repertoire courant de la machine (le repertoire
+dans lequel se trouve le dockerfile utilisé) dans le repertoire courant du conteneur (/app).
+
+Ces deux instructions COPY ont selon moi des problèmes.
+
+D'abord, un bon nombre des éléments copiés ne sont pas nécessaires :
+
+- **package-lock.json**, copié par le premier COPY : ```COPY package*.json .```, puisque ce fichier
+est généré par un npm install à l'intérieur du conteneur ;
+- **les nodes modules** (qui sont les dépendances nécessaires au bon fonctionnement de notre 
+serveur NodeJS, définies dans le package.json), copiés par le deuxième COPY : ```COPY . .```, 
+puisqu'ils sont également générés par un npm install réalisé à l'intérieur du conteneur ;
+
+Notamment, dans l'ordre dans lequel les lignes du Dockerfile sont exécutées, on copie 
+package-lock.json, alors qu'on l'écrase juste après par une instruction npm install 
+exécutée à l'intérieur du conteneur actif.
+
+De plus, ce "nouveau" package-lock.json écrasé par un npm install, va lui-même se faire écraser
+par la copie finale (la deuxième), qui copie tout le repertoire courant (celui du dockerfile) 
+dans le repertoire courant du conteneur (/app).
+
+Au final, nous aurons copié deux fois le package-lock.json avec les COPY, et nous l'aurons
+généré une fois par un npm install. Chaque copie et chaque génération écrase le fichier 
+package-lock.json. Mais au final, on se retrouve avec le package-lock.json présent dans le 
+repertoire courant de la machine hôte.
+
+De même pour les nodes_modules, générés par un npm install (grâce au package.json), puis écrasés
+par la deuxième copie (repertoire courant de la machine hôte dans repertoire courant du 
+conteneur).
+
+Le fait que ces fichiers soient copiés plusieurs fois/écrasés est déjà problématique en soi en termes
+de performances, mais ici, nous avons un "problème" supplémentaire : les nodes modules et le package-lock.json 
+n'ont tout simplement pas besoin d'être copiés.
+
+
+
 
 
 
