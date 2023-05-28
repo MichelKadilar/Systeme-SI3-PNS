@@ -335,7 +335,21 @@ pas un conteneur du tout), tandis que ```EXPOSE``` est davantage à titre inform
 utilisé pour rendre accessible un port d'un conteneur par d'autres conteneurs du même moteur
 docker.
 
+### Réponse à la question
 
+Dans le makefile, il suffit de rajouter :
+
+```makefile
+run:
+	docker run -p 8888:8080 node-app # docker run -p hostPort:containerPort
+```
+
+où node-app est le nom de l'image construite à partir du dockerfile :
+
+```makefile
+build:
+	docker build -t node-app -f Dockerfile . # Il faut être dans le répertoire node pour que ça fonctionne
+```
 
 
 
