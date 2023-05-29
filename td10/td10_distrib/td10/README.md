@@ -654,6 +654,16 @@ puis relancer le serveur.
 Ce qui fait pas mal d'opérations inutiles qui auraient pu être évitées pour améliorer
 les performances de génération et d'exécution de notre conteneur.
 
+## Exercice 12
+
+On peut fournir cette variable d'environnement ```TZ=Europe/Paris ``` soit dans le Dockerfile
+avec ```ENV TZ=Europe/Paris``` comme instruction du Dockerfile, soit "dynamiquement" au 
+lancement d'un conteneur : ```-e TZ=Europe/Paris```.
+
+On choisit de la fournir "dynamiquement" lors de l'exécution d'un conteneur :
+
+```docker run -p 8888:8080 -e TZ=Europe/Paris node-app``` et cela fonctionne très bien.
+
 
 
 
