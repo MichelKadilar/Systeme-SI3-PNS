@@ -14,10 +14,13 @@ COPY package*.json .
 RUN npm install --omit=dev
 
 # Copie l'application
-COPY . .
+COPY --chown=node:node . .
 
 # Expose le port sur lequel l'applcation écoute
 EXPOSE 8080
+
+## L'utilisateur courant devient "node"
+USER node
 
 # Démarre l'application
 CMD ["npm", "start"]

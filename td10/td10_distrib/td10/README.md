@@ -750,6 +750,40 @@ Les identifiants de mon utilisateur sont : UID = 0 et GID = 0 (pour signifier qu
 Les groupes de mon utilisateur sont : groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),
 10(wheel),11(floppy), 20(dialout),26(tape),27(video)
 
+## Exercice 17
+
+Commande pour lancer le conteneur avec un utilisateur spécifique (en l'occurrence : "node") :
+```docker run --user node -p 8888:8080 -e TZ=Europe/Paris node-app # docker run --user userName -p hostPort:containerPort imageName```
+
+## Exercice 18
+
+Pour changer les permissions des fichiers copiés de la machine hôte vers le conteneur, il faut,
+dans le Dockerfile, utiliser la commande :
+```COPY --chown=user:group hostPat containerPath```
+
+Dans notre cas, on va devoir replacer ```COPY . .``` dans le dockerfile par : 
+```COPY --chown=node:node . .``` afin de changer les permissions de tous les fichiers du répertoire
+courant qui sont copiés. Après cette commande, les fichiers auront les permissions nécessaires
+à ce que l'utilisateur node puisse les exécuter.
+
+On aurait pu aussi donner les droits "node" lors de la copie de : ```COPY package*.json .```,
+mais cela est inutile puisqu'à ce niveau, l'utilisateur sera toujours root, et qu'en plus, les fichiers
+copiés seront écrasés par la prochaine copie : ```COPY --chown=node:node . .```, et aurons cette
+fois le niveau de permission "node".
+
+Finalement, on switch d'utilisateur juste avant de lancer le service (à ce stade, les fichiers
+copiés ont les droits "node", donc l'utilisateur ne va rencontrer aucun problème à 
+l'exécution), dans le Dockerfile : ```USER node``` pour que l'utilisateur node soit l'utilisateur
+par défaut de l'image et des conteneurs produits à partir de cette image.
+
+De cette façon, l'utilisateur node aura finalement les droits de "tout faire" sur ces 
+fichiers copiés, et par conséquent aura le droit d'agir sur le service NodeJS.
+
+## Exercice 19
+
+Je ne suis effectivement pas root lorsque je me connecte après mes dernières modifications du dockerfile.
+
+## Exercice 20
 
 
 
