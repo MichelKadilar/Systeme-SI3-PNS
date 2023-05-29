@@ -728,6 +728,27 @@ cat lodel # dans le conteneur
 
 Pour créer un volume nommé : ```docker volume create volumeName```
 Pour inspecter des informations sur ce volume : ```docker inspect volumeName```
+Pour lancer un conteneur en utilisant un volume : ```docker run -v volumeName:/pathFromWhichDataWillBeStoredInVolume imageName```
+
+COMPLETER PAR LA REPONSE A LA QUESTION
+
+## Exercice 16
+
+Par défaut, tous les conteneurs et images sont créés avec un super-utilisateur (root) 
+à l'intérieur. Autrement dit, l'utilisateur par défaut de tous les conteneurs est un 
+super-utilisateur.
+
+Lorsqu'on regarde (sans modifier l'utilisateur par défaut des images et des conteneurs docker) qui
+est propriétaire des fichiers contenus dans le conteneur, on trouve pour les fichiers crées nous-mêmes l'UID = 0
+et le GID = 0, et 0 est l'identifiant de "root". Ainsi, root est le propriétaire de tous les 
+fichiers contenus dans un conteneur ou dans une image docker.
+
+Pour se connecter au terminal/shell d'un conteneur en cours d'exécution : ```docker exec -it containerNameOrID /bin/sh```
+
+Le nom de l'utilisateur avec lequel je me suis connecté est "user".
+Les identifiants de mon utilisateur sont : UID = 0 et GID = 0 (pour signifier que je suis root)
+Les groupes de mon utilisateur sont : groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),
+10(wheel),11(floppy), 20(dialout),26(tape),27(video)
 
 
 
