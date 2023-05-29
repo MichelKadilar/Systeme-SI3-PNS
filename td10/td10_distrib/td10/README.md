@@ -652,13 +652,7 @@ parmi celles qui ne modifient pas grand-chose (et surtout, pas des dépendances)
 recopier tout le répertoire courant, faire un npm install pour tout générer à nouveau, 
 puis relancer le serveur.
 Ce qui fait pas mal d'opérations inutiles qui auraient pu être évitées pour améliorer
-les performances de génération et d'exécution de notre conteneur (d'ailleurs, cette pratique-ci
-nuit au chargement dynamique des changements : en effet, lorsqu'un serveur node js est lancé et qu'on
-modifie une ligne de code, par exemple, le serveur continue toujours de tourner et met automatiquement
-à jour le serveur par rapport à cette nouvelle ligne de code. Dans cette "mauvaise" pratique, 
-à chaque changement de ligne de code, il faudra stopper le serveur et générer à nouveau
-toutes les dépendances avec npm install, ce qui fait perdre les avantages principaux d'un tel 
-serveur NodeJS)
+les performances de génération et d'exécution de notre conteneur.
 
 
 
