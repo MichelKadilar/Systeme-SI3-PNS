@@ -10,7 +10,7 @@ const HOST = '0.0.0.0';
 const app = express();
 app.get('/', (req, res) => {
   const date = new Date().toLocaleString()  
-  res.send(`<h1>Hello, World!</h1>\nToday is ${date}`);
+  res.send(`<h1>Hello, </h1>\nToday is ${date}`);
 });
 
 app.listen(PORT, HOST, () => {

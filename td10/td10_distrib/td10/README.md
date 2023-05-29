@@ -357,7 +357,7 @@ et d'ajouter par-dessus tout le nécessaire pour NodeJS.
 Par la suite, nos propres modifications sont reprises à la 5ème couche, avec
 l'instruction : ```WORKDIR /app```.
 
-COPY est quant à lui utiisé à deux reprises dans le Dockerfile :
+COPY est quant à lui utilisé à deux reprises dans le Dockerfile :
 
 ```COPY package*.json .``` et ```COPY . .```.
 
@@ -420,9 +420,245 @@ générées normalement grâce à la commande ```npm install```. Sauf que ces d�
 que les dépendances ne fonctionnent pas correctement et donc que le serveur NodeJS ne tourne
 pas correctement.
 
+## Exercice 9
+
+Pour partager un fichier de l'hôte avec un fichier du conteneur (un fichier pouvant être un repertoire),
+il est possible d'utiliser les volumes. Les volumes permettent la persistance des données = 
+Si on fait des modifications sur des fichiers d'un conteneur qui sont dans un volume, on ne 
+perd pas ces modifications, même si le conteneur est supprimé.
+Actuellement, sans volume, toutes les modifications réalisées sur des fichiers par nos conteneurs
+sont perdues. Le volume permet donc de faire durer la donnée dans le temps.
+
+### Les deux types de volumes
+
+Il existe deux types de volumes : "bind mount"/non nommé, et "nommé", qui utilisent tous les
+deux le stockage de la machine hôte afin d'assurer une persistence de certaines données de
+conteneurs. Ils utilisent le système de fichiers de l'hôte pour faire persister des données.
+
+Dans les faits, il en existe un troisième, dont on ne parle pas vraiment : les volumes "internes",
+qui sont simplement les espaces de stockages du conteneur. Ces volumes "internes" permettent
+donc la persistence des données à l'intérieur même des conteneurs.
+Ainsi, lorsqu'on supprime le conteneur, le volume interne associé est aussi supprimé, effaçant
+toutes traces du conteneur sur la planète Euphor.
+
+#### Volume bind mount/non nommé
+
+Les volumes non-nommés/"bind mount" peuvent être considérés comme de simples partages de 
+fichiers entre une machine hôte et un conteneur. Ce qu'il se passe, c'est qu'on va, dans le 
+conteneur, avoir un fichier de notre machine hôte qui sera lié à un fichier du conteneur.
+
+Les répertoires et les fichiers du "bind mount" sont les mêmes que ceux de la machine hôte. 
+Toute modification d'un côté est immédiatement répercutée de l'autre côté, car les deux 
+côtés contiennent les mêmes données.
+
+Ce type de volume dépend donc de la machine hôte, et donc de son système de fichiers et
+de son système d'exploitation.
+
+Pour utiliser un volume non-nommé (bind mount), il faut utiliser l'option :
+
+```-v hostPathToShareWithContainer:containerPathToStoreData:accessRightsToHostPathByContainer```
+
+par exemple :
+
+```-v /etc/localtime:/etc/localtime:ro```, qui permet de partager le fichier localtime du 
+repertoire /etc de la machine hôte, et d'y avoir accès au chemin /etc/localtime dans le 
+conteneur, et avec comme droits d'accès aux données du host : droit de lecture (ro = read-only,
+wo = write-only, xo = execute only, rw = read write, rx = read execute, etc).
+
+Cela s'utilise avec la commande ```docker run``` :
+
+```docker run -p 8888:8080 -v /etc/localtime:/etc/localtime:ro imageName``` par exemple.
+
+Dans notre cas, nous voulons partager en "bind mount" deux fichiers de la machine linux hôte :
+```/etc/localtime``` et ```/etc/timezone```, et cela uniquement avec des droits de lecture.
+
+Nous allons donc utiliser lors de l'exécution de notre conteneur :
+
+```docker run -p 8888:8080 -v /etc/localtime:/etc/localtime:ro -v /etc/timezone:/etc/timezone:ro node-app```
+
+Ce type de volume "non-nommé" est donc géré par le système de fichiers de la machine hôte et 
+les données sont retrouvables grâce à une adresse dans le système de fichiers.
+
+#### Volume nommé
+
+Les volumes nommés, quant à eux, permettent de créer un "espace de stockage" propre à notre moteur
+Docker, qui sera évidemment stocké sur le système de fichiers de l'utilisateur, mais qui sera
+entièrement géré par le moteur Docker, de façon à rendre ce type de volumes totalement compatibles avec 
+tous les systèmes d'exploitation hôtes (Windows, MacOS, Linux...).
+
+Un autre avantage, en plus de la comptabilité, est le fait qu'il soit "nommé", et qu'on puisse donc
+le retrouver grâce à un nom qu'on aura décidé, et pas grâce à un chemin.
+
+Pour le mettre en pratique, il faut passer par plusieurs étapes que je décrirai dans l'exercice 15.
+
+## Exercice 10
+
+Il suffit d'ajouter ces deux instructions dans le Dockerfile :
+
+```dockerfile
+RUN apk add tzdata
+RUN apk add musl-locales
+```
+
+Ces deux instructions permettent d'ajouter des paquetages sur un noyau linux Alpine, apk étant
+le gestionnaire de paquetage utilisé sur un système alpine, en l'occurrence, sur notre système
+alpine, on décide d'y rajouter deux paquetages : tzdata, et musl-locales.
+
+On remarque alors que le problème de l'heure à l'intérieur du conteneur est bel et bien corrigé.
+
+## Exercice 11
+
+Le Dockerfile a une propriété commune avec le Makefile : Lorsqu'on rebuild une image qui a déjà
+été build, il ne rebuild que ce qui a été modifié depuis le dernier build et ne reéxecute
+que les instructions de Dockerfile qui se situent "au-dessus" (en termes de couches, mais en 
+dessous en termes de lecture du dockerfile pour nous), et l'ajoute en tant que "couche" 
+supplémentaire (pour les instructions qui génèrent des couches) par-dessus toutes les couches
+créées auparavant dans cette image.
+
+C'est en raison de cette propriété qu'il est plus adapté de séparer les copies en deux temps.
+Dans notre cas, nous avons un serveur NodeJS, et donc certaines choses à faire par rapport à ce
+serveur NodeJS (npm install, garantir la validité du package.json, etc).
 
 
+### Explication théorique :
 
+On rappelle que les nodes_modules contiennent les dépendances, et que le package-lock.json est
+un fichier read-only garantissant les versions des dépendances et des sous-dépendances pour 
+notre application.
+
+Maintenant, que voulons-nous ? 
+
+- Voulons-nous que les fichiers générés par npm install (notamment les nodes_modules et 
+le package-lock.json) soit regénérés par un npm install à la moindre modification ayant lieu 
+dans notre dossier /node (dossier courant /node de la question du TP) lorsqu'on rebuild 
+l'image docker de notre serveur NodeJS tournant sur alpine ?
+
+OU
+
+- Voulons-nous que les fichiers générés par npm install (notamment les nodes_modules et
+le package-lock.json) soit regénérés par un npm install à la moindre modification ayant lieu
+dans notre package.json (qui gère les dépendances) ?
+
+La bonne réponse est évidemment la deuxième, nous voulons que tout ce qui est lié aux 
+dépendances ne soit régénéré que lorsqu'il y a une modification des...dépendances.
+
+### Explication pratique :
+
+#### Bonne pratique
+
+
+```dockerfile
+# Créé un répertoire de travail pour l'application et s'y déplace
+WORKDIR /app
+
+# Copie les fichiers package.json et package-lock.json (s'il existe)
+COPY package*.json .
+
+# Installe les dépendance de l'application
+RUN npm install --omit=dev
+
+# Copie l'application
+COPY . .
+
+# Démarre l'application
+CMD ["npm", "start"]
+```
+
+Dans cette version du dockerfile, nous aurons deux couches et deux commandes à exécuter :
+
+une couche pour la copie des package*.json (package.json et package-lock.json), une commande
+```npm instaall --omit=dev``` à exécuter, encore une autre couche pour copier tout le dossier courant
+de la machine hôte (/node) dans le dossier courant du conteneur (/app), et enfin une dernière commande
+à exécuter ```npm start```, pour lancer le serveur NodeJS.
+
+Les 2 couches et les 2 commandes sont représentées ainsi :
+
+Commande 2 : CMD ["npm", "start"] <br>
+Couche 2 : COPY . . <br>
+Commande 1 : RUN npm install --omit=dev <br>
+Couche 1 (base) : COPY package*.json <br>
+
+Puisqu'à chaque execution de docker build sur une image déjà créée, le Dockerfile ne va
+réaliser que les instructions qui dépendent des modifications ayant eu lieu entre le dernier 
+build et celui-ci, si nous avons modifié une ligne de code de notre fichier server.js sans en 
+modifier les dépendances, alors le Dockerfile va être "malin" et ne va reexécuter que 
+l'instruction `COPY . .` et ce qui se trouve "au-dessus" en termes de "couches/commandes" et 
+en-dessous dans le sens de lecture du Dockerfile car il n'y aura pas besoin de "reconstruire"
+des choses qu'à partir des éléments modifiés, tout le reste n'ayant pas été modifié, rien ne 
+changera si on les reconstruit, donc cela serait inutile, donc le Dockerfile ne le fait pas.
+
+Autrement dit, si je modifie une ligne de code dans le fichier server.js et que je rebuild mon image
+docker par-dessus une image déjà existante, le Dockerfile va vouloir copier uniquement les
+fichiers modifiés, or, qu'est-ce qui implique les fichiers modifiés ? Uniquement l'instruction
+```COPY . .``` du Dockerfile. Donc on crée une couche supplémentaire en refaisant la copie du 
+repertoire courant de la machine hôte dans le repertoire courant du conteuneur, afin de récupérer
+le "nouveau" fichier server.js (et, évidemment, tous les autres fichiers du dossier, par la même 
+occasion), "écrasant" au passage les anciens fichiers qui étaient dans l'image docker.
+Et, comme on l'a dit, on exécute les instructions/commandes "au-dessus" dans la vision en 
+couches, et "en-dessous" dans le sens de lecture classique du dockerfile, ce qui implique donc dans notre cas
+d'exécuter uniquement l'instruction ```CMD ["npm", "start"]```, qui exécute la commande
+```npm start``` à l'intérieur du conteneur crée à partir de l'image.
+
+Cela permet donc de ne pas avoir à rebuild à chaque fois toute l'image (notamment la génération
+des dépendances et du package-lock.json avec npm install, qui peuvent prendre du temps) à la 
+moindre modification de ligne de code (et bien évidemment, de l'exécution de docker build, 
+après la modification).
+
+Cela permet donc de ne générer à nouveau les dépendances que lorsqu'on modifie package.json.
+
+Bien évidemment, le .dockerignore crée dans une des questions précédentes est là pour empêcher
+qu'on copie les nodes_modules via ```COPY . .```, pour les mêmes raisons de gains de 
+performances (et car c'est un peu inutile).
+
+#### VERSUS
+
+#### Mauvaise pratique
+
+La mauvaise pratique, vous l'avez peut-être compris, repose sur le fait qu'à chaque 
+```docker build```, un npm install soit lancé, peu importe les modifications effectuées sur 
+notre projet (ou TP, si vous préférez, dans notre dossier /node).
+
+En effet, si nous n'avions qu'un seul COPY, ainsi :
+
+```dockerfile
+# Créé un répertoire de travail pour l'application et s'y déplace
+WORKDIR /app
+
+# Copie l'application
+COPY . .
+
+# Installe les dépendance de l'application
+RUN npm install --omit=dev
+
+# Démarre l'application
+CMD ["npm", "start"]
+```
+
+Nous aurions la "vue" suivantes (sous formes de couches et de commandes):
+
+La couche et les 2 commandes sont représentées ainsi :
+
+Commande 2 : CMD ["npm", "start"] <br>
+Commande 1 : RUN npm install --omit=dev <br>
+Couche 1 (base) : COPY . . <br>
+
+Ce qui signifie que si on modifie server.js, par exemple pour changer une ligne de code qui ne nécessite
+aucunement de générer à nouveau toutes les dépendances du serveur NodeJS, eh bien...nous allons
+devoir recopier tous les fichiers du repertoire courant de la machine hôte dans le repertoire
+courant du conteneur, puis puisqu'on exécute toutes les commandes se trouvant sur une "couche"
+"au-dessus" de la couche où les modifications sont détectées, alors les deux commandes présentes
+ici devront forcément être exécutées. Ce qui signifie qu'à la moindre modification, même
+parmi celles qui ne modifient pas grand-chose (et surtout, pas des dépendances), nous devrons
+recopier tout le répertoire courant, faire un npm install pour tout générer à nouveau, 
+puis relancer le serveur.
+Ce qui fait pas mal d'opérations inutiles qui auraient pu être évitées pour améliorer
+les performances de génération et d'exécution de notre conteneur (d'ailleurs, cette pratique-ci
+nuit au chargement dynamique des changements : en effet, lorsqu'un serveur node js est lancé et qu'on
+modifie une ligne de code, par exemple, le serveur continue toujours de tourner et met automatiquement
+à jour le serveur par rapport à cette nouvelle ligne de code. Dans cette "mauvaise" pratique, 
+à chaque changement de ligne de code, il faudra stopper le serveur et générer à nouveau
+toutes les dépendances avec npm install, ce qui fait perdre les avantages principaux d'un tel 
+serveur NodeJS)
 
 
 
