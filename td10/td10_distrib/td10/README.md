@@ -664,10 +664,70 @@ On choisit de la fournir "dynamiquement" lors de l'exécution d'un conteneur :
 
 ```docker run -p 8888:8080 -e TZ=Europe/Paris node-app``` et cela fonctionne très bien.
 
+## Exercice 13
 
+### Avantages et inconvénients du bind mount pour le réglage de l'heure
 
+#### Avantages
 
+- Puisque l'heure du conteneur est lié par bind mount à l'heure de la machine hôte, si les 
+permissions d'accès du conteneur au fichier timezone sur la machine hôte sont bien gérées, 
+alors il ne sera pas nécessaire de modifier manuellement le timezone du conteneur si jamais 
+on venait à modifier cela (pratique quand on gère plusieurs conteneurs).
 
+- Certaines opérations peuvent nécessiter que la timezone soit la même dans le conteneur et 
+sur la machine hôte.
+
+#### Inconvénients
+
+- Si les permissions d'accès du fichier timezone de la machine hôte par le conteneur 
+sont mal gérées (par exemple, en donnant les droits d'écriture alors qu'on ne le veut pas),
+rien n'empêchera le conteneur de pouvoir modifier l'heure sur la machine de l'hôte, ce qui
+peut être indésirable.
+
+- Si on veut mettre une autre timezone à notre conteneur par rapport à notre machine hôte, on
+ne peut pas.
+
+- Si nos conteneurs sont sur le cloud, on ne sait pas forcément dans quelle timezone se trouve
+la machine qui va héberger notre conteneur à un instant T, et donc le timezone peut être 
+totalement différents sur nos différents conteneurs (et même pour un même conteneur, 
+selon l'instant T), ce qui peut être problématique dans certains cas où on utilise l'heure
+pour réaliser certaines opérations par exemple.
+
+- Ne peut être réalisé que lors de l'exécution d'un conteneur
+
+### Avantages et inconvénients de la variable d'environnement pour le réglage de l'heure
+
+#### Avantages
+
+- Efficace quand on veut différentes timezone selon le conteneur
+- Timezone complètement dissociée des autres conteneurs et la machine hôte
+- Facile à modifier en cas de besoin
+- Peut-être fait dans le dockerfile ou lors de l'exécution d'un conteneur
+
+#### Inconvénients
+
+Je n'ai pas trouvé d'inconvénient qui en est vraiment un à mon sens.
+
+## Exercice 14
+
+```
+mkdir data # existe normalement par défaut sur un système linux
+docker run --rm -it -v ./data:/data alpine:3.17 /bin/sh # Dans mon cas, sans le . à ./data
+
+cd /data # dans le conteneur
+touch lodel # dans le conteneur
+
+ls /data # sur la machine hôte : on voit que lodel existe
+echo "toto" >> /data/lodel
+
+cat lodel # dans le conteneur
+```
+
+## Exercice 15
+
+Pour créer un volume nommé : ```docker volume create volumeName```
+Pour inspecter des informations sur ce volume : ```docker inspect volumeName```
 
 
 
