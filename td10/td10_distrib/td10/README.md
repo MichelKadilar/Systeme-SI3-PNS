@@ -785,5 +785,20 @@ Je ne suis effectivement pas root lorsque je me connecte après mes dernières m
 
 ## Exercice 20
 
+Créer un réseau docker de communication inter-conteneur : ```docker network create myNetworkName```
 
+Pour que les ports avec lesquels travaille notre service sur le conteneur ne soient pas accessibles
+depuis la machine hôte, il suffit de ne plus utiliser l'option ```-p``` = ```--publish``` de docker run. 
 
+Ainsi, on se retrouve avec la commande docker run suivante :
+```docker run --network mynetwork -e TZ=Europe/Paris node-app # docker run --network networkNameToConnectTo imageName```
+
+## Exercice 21
+
+Notre image "test" sera produite à partir d'un Dockerfile très simple incluant le paquetage curl :
+
+```dockerfile
+FROM alpine:3.17
+
+RUN apk add curl
+```
